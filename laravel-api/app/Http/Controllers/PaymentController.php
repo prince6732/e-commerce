@@ -25,7 +25,7 @@ class PaymentController extends Controller
         $this->appId = env('CASHFREE_APP_ID');
         $this->secretKey = env('CASHFREE_SECRET_KEY');
         $this->apiVersion = env('CASHFREE_API_VERSION', '2022-09-01');
-        $this->baseUrl = env('CASHFREE_BASE_URL');
+        $this->baseUrl = env('CASHFREE_BASE_URL', 'https://sandbox.cashfree.com/pg');
     }
 
     public function initiatePayment(Request $request)
@@ -168,21 +168,14 @@ class PaymentController extends Controller
                     'customer_name' => $user->name,
                 ],
                 'order_meta' => [
-                    'return_url' => $request->header('Origin') . "/orders/{$order->id}/payment-status?order_id={order_id}",
+                    'return_url' => $request->header('Origin') . "/checkout?order_id={order_id}",
                 ]
             ]);
 
             if ($response->successful()) {
                 $paymentData = $response->json();
 
-                // Clear cart only if it was a cart order
-                if (!$isSingleItem) {
-                    if ($request->has('cart_items') && !empty($request->cart_items)) {
-                        Cart::whereIn('id', $request->cart_items)->delete();
-                    } else {
-                        Cart::where('user_id', $userId)->delete();
-                    }
-                }
+                // Do NOT clear cart here. Wait for payment success.
 
                 DB::commit();
 
@@ -240,6 +233,9 @@ class PaymentController extends Controller
                             'transaction_id' => $orderData['cf_order_id'] ?? null, // Or payment reference
                         ]);
                         $order->addTracking('confirmed', 'Payment successful', 'Online Store');
+
+                        // Clear cart for the user
+                        Cart::where('user_id', $order->user_id)->delete();
                     }
                 } else {
                     // Handle failed/pending

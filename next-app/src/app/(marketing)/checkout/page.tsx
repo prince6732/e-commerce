@@ -1,18 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Script from 'next/script';
 import axios from "../../../../utils/axios";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { ArrowLeft, MapPin, CreditCard, CheckCircle2, Package, X } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, CheckCircle2, Package, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { placeOrderFromCart } from "../../../../utils/orderApi";
 import imgPlaceholder from "@/public/1.jpg";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import Modal from "@/components/(sheared)/Modal";
 
 const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
 
@@ -71,11 +72,17 @@ const shippingSchema = yup.object({
 
 const CheckoutPage = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user, loading: authLoading } = useAuth();
     const { items, total, count, loading: cartLoading, clearCart } = useCart();
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
+
+    // Payment Verification State
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [paymentStatus, setPaymentStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
+    const [paymentMessage, setPaymentMessage] = useState("Verifying payment...");
 
     // Toast notification state
     const [showToast, setShowToast] = useState(false);
@@ -140,6 +147,54 @@ const CheckoutPage = () => {
             router.push('/cart');
         }
     }, [user, authLoading, items, cartLoading, router]);
+
+    // Check for payment return
+    useEffect(() => {
+        const orderId = searchParams.get("order_id");
+        if (orderId) {
+            verifyPayment(orderId);
+        }
+    }, [searchParams]);
+
+    const verifyPayment = async (orderId: string) => {
+        setShowPaymentModal(true);
+        setPaymentStatus('verifying');
+        setPaymentMessage("Verifying your payment...");
+
+        try {
+            const response = await axios.post(`/api/payment/verify`, {
+                order_id: orderId
+            });
+
+            if (response.data.success && response.data.status === 'PAID') {
+                setPaymentStatus('success');
+                setPaymentMessage("Payment successful! Redirecting to orders...");
+                
+                // Clear cart locally as well to be safe
+                await clearCart();
+
+                setTimeout(() => {
+                    router.push('/orders');
+                }, 3000);
+            } else {
+                setPaymentStatus('failed');
+                setPaymentMessage("Payment failed or pending. Please try again.");
+                setTimeout(() => {
+                    setShowPaymentModal(false);
+                    // Remove query params
+                    router.replace('/checkout');
+                }, 3000);
+            }
+        } catch (error) {
+            console.error("Payment verification failed:", error);
+            setPaymentStatus('failed');
+            setPaymentMessage("Failed to verify payment.");
+            setTimeout(() => {
+                setShowPaymentModal(false);
+                router.replace('/checkout');
+            }, 3000);
+        }
+    };
 
     // Update form data when user changes
     useEffect(() => {
@@ -886,6 +941,41 @@ const CheckoutPage = () => {
                 src="https://sdk.cashfree.com/js/v3/cashfree.js"
                 strategy="lazyOnload"
             />
+
+            {/* Payment Status Modal */}
+            <Modal
+                isOpen={showPaymentModal}
+                onClose={() => {}} // Prevent closing manually while verifying
+                title={paymentStatus === 'verifying' ? "Verifying Payment" : paymentStatus === 'success' ? "Payment Successful" : "Payment Failed"}
+                width="max-w-md"
+            >
+                <div className="flex flex-col items-center justify-center p-6 text-center">
+                    {paymentStatus === 'verifying' && (
+                        <>
+                            <Loader2 className="w-12 h-12 text-orange-500 animate-spin mb-4" />
+                            <p className="text-gray-600">{paymentMessage}</p>
+                        </>
+                    )}
+                    {paymentStatus === 'success' && (
+                        <>
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                <CheckCircle2 className="w-8 h-8 text-green-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Order Confirmed!</h3>
+                            <p className="text-gray-600">{paymentMessage}</p>
+                        </>
+                    )}
+                    {paymentStatus === 'failed' && (
+                        <>
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                <X className="w-8 h-8 text-red-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Payment Failed</h3>
+                            <p className="text-gray-600">{paymentMessage}</p>
+                        </>
+                    )}
+                </div>
+            </Modal>
         </div>
     );
 };
