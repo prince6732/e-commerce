@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import Script from 'next/script';
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { ArrowLeft, MapPin, CreditCard, CheckCircle2, Package, Minus, Plus } from "lucide-react";
@@ -103,6 +104,7 @@ const CheckoutSingle = () => {
 
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
     const [product, setProduct] = useState<Product | null>(null);
     const [variant, setVariant] = useState<Variant | null>(null);
     const [quantity, setQuantity] = useState(1);
@@ -235,6 +237,33 @@ const CheckoutSingle = () => {
                 notes: "Single item order via Buy Now"
             };
 
+            if (paymentMethod === 'online') {
+                try {
+                    const response = await axios.post(`/api/payment/initiate`, orderData);
+
+                    if (response.data.success) {
+                        const { payment_session_id } = response.data;
+                        
+                        const cashfree = new (window as any).Cashfree({
+                            mode: "sandbox"
+                        });
+
+                        cashfree.checkout({
+                            paymentSessionId: payment_session_id,
+                            redirectTarget: "_self"
+                        });
+                    } else {
+                        alert(response.data.message || "Failed to initiate payment");
+                        setLoading(false);
+                    }
+                } catch (error: any) {
+                    console.error("Payment initiation failed:", error);
+                    alert(error.response?.data?.message || "Failed to initiate payment");
+                    setLoading(false);
+                }
+                return;
+            }
+
             const response = await placeSingleItemOrder(orderData);
 
             if (response.success) {
@@ -248,7 +277,9 @@ const CheckoutSingle = () => {
             console.error("Order placement failed:", error);
             alert("Failed to place order. Please try again.");
         } finally {
-            setLoading(false);
+            if (paymentMethod !== 'online') {
+                setLoading(false);
+            }
         }
     });
 
@@ -494,15 +525,15 @@ const CheckoutSingle = () => {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <div className="border border-orange-300 rounded-lg p-4 bg-orange-50">
+                                    <div className={`border rounded-lg p-4 ${paymentMethod === 'cod' ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'}`}>
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="radio"
                                                 id="cod"
                                                 name="payment"
                                                 value="cod"
-                                                checked={true}
-                                                readOnly
+                                                checked={paymentMethod === 'cod'}
+                                                onChange={() => setPaymentMethod('cod')}
                                                 className="w-4 h-4 text-orange-500 focus:ring-orange-500"
                                             />
                                             <label htmlFor="cod" className="flex-1 cursor-pointer">
@@ -512,16 +543,20 @@ const CheckoutSingle = () => {
                                         </div>
                                     </div>
 
-                                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 opacity-60">
+                                    <div className={`border rounded-lg p-4 ${paymentMethod === 'online' ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'}`}>
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="radio"
-                                                disabled
-                                                className="w-4 h-4 text-gray-400"
+                                                id="online"
+                                                name="payment"
+                                                value="online"
+                                                checked={paymentMethod === 'online'}
+                                                onChange={() => setPaymentMethod('online')}
+                                                className="w-4 h-4 text-orange-500 focus:ring-orange-500"
                                             />
-                                            <label className="flex-1">
-                                                <div className="font-semibold text-gray-500">Online Payment</div>
-                                                <div className="text-sm text-gray-400">Coming soon - Credit/Debit Card, UPI, Net Banking</div>
+                                            <label htmlFor="online" className="flex-1 cursor-pointer">
+                                                <div className="font-semibold text-gray-900">Online Payment</div>
+                                                <div className="text-sm text-gray-600">Credit/Debit Card, UPI, Net Banking</div>
                                             </label>
                                         </div>
                                     </div>
@@ -842,6 +877,11 @@ const CheckoutSingle = () => {
                     </div>
                 </div>
             </div>
+            {/* Cashfree SDK */}
+            <Script
+                src="https://sdk.cashfree.com/js/v3/cashfree.js"
+                strategy="lazyOnload"
+            />
         </div>
     );
 

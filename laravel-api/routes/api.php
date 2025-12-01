@@ -20,6 +20,7 @@ use App\Http\Controllers\LikeController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ThemesController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 
 // ==========================================
 // PUBLIC ROUTES (No Authentication Required)
@@ -189,6 +190,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/place-single-item', [OrderController::class, 'placeSingleItemOrder']);
     Route::patch('/orders/{id}/cancel', [OrderController::class, 'cancelOrder']);
     Route::get('/orders/{id}/tracking', [OrderController::class, 'getTracking']);
+
+    // ========== USER: PAYMENT MANAGEMENT ==========
+    Route::post('/payment/initiate', [PaymentController::class, 'initiatePayment']);
+    Route::post('/payment/verify', [PaymentController::class, 'verifyPayment']);
 
     // ========== ADMIN: ORDER MANAGEMENT ==========
     Route::get('/admin/orders', [OrderController::class, 'adminIndex']);

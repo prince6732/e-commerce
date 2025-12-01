@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Script from 'next/script';
+import axios from "../../../../utils/axios";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { ArrowLeft, MapPin, CreditCard, CheckCircle2, Package, X } from "lucide-react";
@@ -73,6 +75,7 @@ const CheckoutPage = () => {
     const { items, total, count, loading: cartLoading, clearCart } = useCart();
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
 
     // Toast notification state
     const [showToast, setShowToast] = useState(false);
@@ -171,6 +174,33 @@ const CheckoutPage = () => {
                 notes: "Order placed via checkout"
             };
 
+            if (paymentMethod === 'online') {
+                try {
+                    const response = await axios.post(`/api/payment/initiate`, orderData);
+
+                    if (response.data.success) {
+                        const { payment_session_id } = response.data;
+                        
+                        const cashfree = new (window as any).Cashfree({
+                            mode: "sandbox"
+                        });
+
+                        cashfree.checkout({
+                            paymentSessionId: payment_session_id,
+                            redirectTarget: "_self"
+                        });
+                    } else {
+                        showToastMessage(response.data.message || "Failed to initiate payment", "error");
+                        setLoading(false);
+                    }
+                } catch (error: any) {
+                    console.error("Payment initiation failed:", error);
+                    showToastMessage(error.response?.data?.message || "Failed to initiate payment", "error");
+                    setLoading(false);
+                }
+                return; // Stop here, let Cashfree handle the rest
+            }
+
             const response = await placeOrderFromCart(orderData);
 
             if (response.success) {
@@ -209,7 +239,9 @@ const CheckoutPage = () => {
             console.error("Order placement failed:", error);
             showToastMessage("❌ Failed to place order. Please check your connection and try again.", "error");
         } finally {
-            setLoading(false);
+            if (paymentMethod !== 'online') {
+                setLoading(false);
+            }
         }
     });
 
@@ -427,15 +459,15 @@ const CheckoutPage = () => {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <div className="border border-orange-300 rounded-lg p-4 bg-orange-50">
+                                    <div className={`border rounded-lg p-4 ${paymentMethod === 'cod' ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'}`}>
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="radio"
                                                 id="cod"
                                                 name="payment"
                                                 value="cod"
-                                                checked={true}
-                                                readOnly
+                                                checked={paymentMethod === 'cod'}
+                                                onChange={() => setPaymentMethod('cod')}
                                                 className="w-4 h-4 text-orange-500 focus:ring-orange-500"
                                             />
                                             <label htmlFor="cod" className="flex-1 cursor-pointer">
@@ -445,16 +477,20 @@ const CheckoutPage = () => {
                                         </div>
                                     </div>
 
-                                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 opacity-60">
+                                    <div className={`border rounded-lg p-4 ${paymentMethod === 'online' ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'}`}>
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="radio"
-                                                disabled
-                                                className="w-4 h-4 text-gray-400"
+                                                id="online"
+                                                name="payment"
+                                                value="online"
+                                                checked={paymentMethod === 'online'}
+                                                onChange={() => setPaymentMethod('online')}
+                                                className="w-4 h-4 text-orange-500 focus:ring-orange-500"
                                             />
-                                            <label className="flex-1">
-                                                <div className="font-semibold text-gray-500">Online Payment</div>
-                                                <div className="text-sm text-gray-400">Coming soon - Credit/Debit Card, UPI, Net Banking</div>
+                                            <label htmlFor="online" className="flex-1 cursor-pointer">
+                                                <div className="font-semibold text-gray-900">Online Payment</div>
+                                                <div className="text-sm text-gray-600">Credit/Debit Card, UPI, Net Banking</div>
                                             </label>
                                         </div>
                                     </div>
@@ -531,15 +567,23 @@ const CheckoutPage = () => {
                                                 <Package className="w-5 h-5 text-amber-600" />
                                             </div>
                                             <div>
-                                                <p className="font-medium text-gray-900">Cash on Delivery</p>
-                                                <p className="text-sm text-gray-600">Pay when your order is delivered to your doorstep</p>
+                                                <p className="font-medium text-gray-900">
+                                                    {paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
+                                                </p>
+                                                <p className="text-sm text-gray-600">
+                                                    {paymentMethod === 'cod' 
+                                                        ? 'Pay when your order is delivered to your doorstep' 
+                                                        : 'Pay securely via Credit/Debit Card, UPI, or Net Banking'}
+                                                </p>
                                             </div>
                                         </div>
-                                        <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                            <p className="text-xs text-amber-700">
-                                                <span className="font-medium">💡 Note:</span> Please keep exact change ready for smooth delivery
-                                            </p>
-                                        </div>
+                                        {paymentMethod === 'cod' && (
+                                            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                                <p className="text-xs text-amber-700">
+                                                    <span className="font-medium">💡 Note:</span> Please keep exact change ready for smooth delivery
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -837,6 +881,11 @@ const CheckoutPage = () => {
                     </div>
                 </div>
             )}
+            {/* Cashfree SDK */}
+            <Script
+                src="https://sdk.cashfree.com/js/v3/cashfree.js"
+                strategy="lazyOnload"
+            />
         </div>
     );
 };
