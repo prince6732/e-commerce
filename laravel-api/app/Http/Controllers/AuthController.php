@@ -12,6 +12,8 @@ use Exception;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -256,6 +258,104 @@ class AuthController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        return response()->json(['message' => 'Password reset successfully']);
+        return response()->json(['message' => 'Password reset successful']);
+    }
+
+    public function googleLogin(Request $request)
+    {
+        try {
+            $request->validate([
+                'token' => 'required|string',
+            ]);
+
+            // Verify the Google token
+            $client = new \Google_Client(['client_id' => config('services.google.client_id')]);
+            $payload = $client->verifyIdToken($request->token);
+
+            if (!$payload) {
+                return response()->json([
+                    'message' => 'Invalid Google token'
+                ], 401);
+            }
+
+            $googleId = $payload['sub'];
+            $email = $payload['email'];
+            $name = $payload['name'];
+            $picture = $payload['picture'] ?? null;
+
+            // Check if user exists
+            $user = User::where('email', $email)->first();
+
+            if ($user) {
+                // Update google_id if not set
+                if (!$user->google_id) {
+                    $user->google_id = $googleId;
+                    $user->save();
+                }
+
+                // If email not verified, verify it
+                if (!$user->email_verified_at) {
+                    $user->email_verified_at = now();
+                    $user->is_verified = true;
+                    $user->save();
+                }
+            } else {
+                // Create new user
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'google_id' => $googleId,
+                    'profile_picture' => $picture,
+                    'email_verified_at' => now(),
+                    'is_verified' => true,
+                    'status' => true,
+                    'password' => bcrypt(Str::random(32)), // Random password for Google users
+                ]);
+
+                try {
+                    $user->assignRole('User');
+                } catch (Exception $e) {
+                    Log::error('Error assigning role to Google user.', ['error' => $e->getMessage()]);
+                }
+            }
+
+            if (!$user->status) {
+                return response()->json([
+                    'message' => 'Your account is inactive. Please contact admin.'
+                ], 403);
+            }
+
+            $role = $user->roles()->pluck('name')->first();
+            $token = $user->createToken('api-token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'Login successful',
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone_number' => $user->phone_number,
+                    'address' => $user->address,
+                    'profile_picture' => $user->profile_picture,
+                    'status' => $user->status,
+                    'role' => $role,
+                    'email_verified_at' => $user->email_verified_at,
+                    'is_verified' => $user->is_verified,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                ],
+            ]);
+        } catch (Exception $e) {
+            Log::error('Google login failed.', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Google login failed',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

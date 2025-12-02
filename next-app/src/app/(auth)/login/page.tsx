@@ -14,6 +14,8 @@ import logo from "@/public/ZeltonHorizontalBlack.png";
 import Image from "next/image";
 import { Check, Eye, EyeOff, LogIn } from "lucide-react";
 import { User } from "@/common/interface"; // Use your shared User type
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import axios from "../../../../utils/axios";
 
 const loginSchema = Yup.object().shape({
   email: Yup.string().required("Email is required"),
@@ -75,6 +77,29 @@ export default function LoginPage() {
     if (loggedUser.role === "Admin") router.push("/dashboard");
     else if (loggedUser.role === "User") router.push("/");
     else setError("Invalid role");
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError("");
+    showLoader();
+    try {
+      const response = await axios.post('/api/auth/google', {
+        token: credentialResponse.credential
+      });
+
+      if (response.data.token && response.data.user) {
+        handleLoginSuccess(response.data.user, response.data.token);
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      setError(error.response?.data?.message || "Google login failed");
+    } finally {
+      hideLoader();
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError("Google login failed. Please try again.");
   };
 
   if (loading || user) {
@@ -169,9 +194,30 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <span className="px-4 text-sm text-gray-500">OR</span>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
+
+        {/* Google Login */}
+        <div className="flex justify-center">
+          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="outline"
+              size="large"
+              width="384"
+              text="continue_with"
+            />
+          </GoogleOAuthProvider>
+        </div>
+
         {/* Footer */}
         <p className="text-sm text-gray-600 text-center mt-6">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <Link href="/register" className="text-orange-500 font-medium hover:underline">
             Create Now
           </Link>

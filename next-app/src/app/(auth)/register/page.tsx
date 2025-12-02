@@ -13,7 +13,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Check, Eye, EyeOff, UserPlus } from "lucide-react";
 import { registerUser } from "../../../../utils/auth";
-import { RegisterUser } from "@/common/interface";
+import { RegisterUser, User } from "@/common/interface";
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import axios from "../../../../utils/axios";
 
 const schema = Yup.object().shape({
   name: Yup.string().required("Name is required"),
@@ -30,7 +32,7 @@ const schema = Yup.object().shape({
 export default function Home() {
   const router = useRouter();
   const { showLoader, hideLoader } = useLoader();
-  const { user, loading } = useAuth();
+  const { user, loading, setUserDirectly } = useAuth();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -89,6 +91,38 @@ export default function Home() {
     } finally {
       hideLoader();
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setErrorMessage(null);
+    showLoader();
+    try {
+      const response = await axios.post('/api/auth/google', {
+        token: credentialResponse.credential
+      });
+
+      if (response.data.token && response.data.user) {
+        const loggedUser: User = response.data.user;
+        const token = response.data.token;
+        
+        localStorage.setItem("user", JSON.stringify(loggedUser));
+        localStorage.setItem("token", token);
+        setUserDirectly(loggedUser);
+
+        if (loggedUser.role === "Admin") router.push("/dashboard");
+        else if (loggedUser.role === "User") router.push("/");
+        else setErrorMessage("Invalid role");
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      setErrorMessage(error.response?.data?.message || "Google signup failed");
+    } finally {
+      hideLoader();
+    }
+  };
+
+  const handleGoogleError = () => {
+    setErrorMessage("Google signup failed. Please try again.");
   };
 
   return (
@@ -228,15 +262,36 @@ export default function Home() {
           >
             Create My Account
           </button>
-
-          {/* Footer */}
-          <p className="text-sm text-gray-600 text-center mt-4">
-            Already have an account?{" "}
-            <Link href="/login" className="text-orange-500 font-medium hover:underline">
-              Login
-            </Link>
-          </p>
         </form>
+
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <span className="px-4 text-sm text-gray-500">OR</span>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
+
+        {/* Google Signup */}
+        <div className="flex justify-center">
+          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="outline"
+              size="large"
+              width="384"
+              text="signup_with"
+            />
+          </GoogleOAuthProvider>
+        </div>
+
+        {/* Footer */}
+        <p className="text-sm text-gray-600 text-center mt-6">
+          Already have an account?{" "}
+          <Link href="/login" className="text-orange-500 font-medium hover:underline">
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );

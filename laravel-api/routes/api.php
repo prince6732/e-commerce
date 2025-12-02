@@ -32,6 +32,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/verify-email-code', [AuthController::class, 'verify']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/auth/google', [AuthController::class, 'googleLogin']);
 
 // Public product routes
 Route::get('/products', [ProductController::class, 'index']);
