@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('google_id')->nullable()->unique();
             $table->string('phone_number', 20)->nullable();
             $table->text('address')->nullable();
             $table->string('profile_picture')->nullable();
@@ -35,7 +36,7 @@ return new class extends Migration
             $table->string('email')->index();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
-            $table->timestamp('expires_at')->nullable(); 
+            $table->timestamp('expires_at')->nullable();
         });
 
         // Sessions Table

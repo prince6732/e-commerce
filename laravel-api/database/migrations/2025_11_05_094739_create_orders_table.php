@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('delivery_confirmation_sent_at')->nullable();
             $table->enum('payment_method', ['cash_on_delivery', 'online'])->default('cash_on_delivery');
             $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending');
+            $table->string('transaction_id')->nullable();
             $table->decimal('subtotal', 10, 2);
             $table->decimal('shipping_fee', 10, 2)->default(0);
             $table->decimal('tax', 10, 2)->default(0);
