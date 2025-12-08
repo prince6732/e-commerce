@@ -54,7 +54,7 @@ export default function About_Us() {
                 </div>
             </div>
             {/* Main Content */}
-            <main className="container mx-auto px-6 py-16 ">
+            <main className="w-full max-w-[1536px] mx-auto px-6 py-16 ">
                 {/* Our Story */}
                 <section className="mb-20 ">
                     <div className="flex flex-col md:flex-row items-center gap-12">

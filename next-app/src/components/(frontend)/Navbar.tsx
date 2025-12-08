@@ -469,7 +469,7 @@ const Navbar = () => {
                 }} />
               </button>
               {isSearchOpen && (
-                <div className="absolute right-0 top-full mt-3 w-96 bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-top-2 duration-200 z-50">
+                <div className="absolute md:right-0 -right-[150px] top-full mt-3 w-96 bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-top-2 duration-200 z-50">
                   <div className="p-6">
                     <form onSubmit={handleSearchSubmit}>
                       <div className="relative">
@@ -924,7 +924,7 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  href="/About_us"
+                  href="/about_us"
                   className="flex items-center gap-3 py-3 px-4 text-gray-900 font-medium hover:bg-orange-50 hover:text-orange-600 rounded-xl transition-all"
                   onClick={() => setMobileMenuOpen(false)}
                 >

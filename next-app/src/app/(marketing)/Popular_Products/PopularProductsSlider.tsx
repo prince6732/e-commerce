@@ -145,7 +145,7 @@ const PopularProductsSlider = () => {
     if (loading) {
         return (
             <section className="py-8 sm:py-12 md:py-16 bg-white">
-                <div className="container mx-auto px-3 sm:px-4 md:px-6">
+                <div className="w-full max-w-[1536px] mx-auto px-7 sm:px-4 md:px-6">
                     <div className="flex items-center justify-between mb-4 sm:mb-6">
                         <div className="flex-1">
                             <div className="h-6 sm:h-8 bg-gray-300 rounded w-48 sm:w-64 mb-2 animate-pulse"></div>
@@ -179,7 +179,7 @@ const PopularProductsSlider = () => {
     if (error) {
         return (
             <section className="py-8 sm:py-12 md:py-16 bg-white">
-                <div className="container mx-auto px-3 sm:px-4 md:px-6">
+                <div className="w-full max-w-[1536px] mx-auto px-7 sm:px-4 md:px-6">
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4">Popular Products</h2>
                     <div className="text-center py-12 bg-gray-50 rounded-lg">
                         <p className="text-red-500 mb-4">{error}</p>
@@ -197,7 +197,7 @@ const PopularProductsSlider = () => {
 
     return (
         <section className="py-8 sm:py-12 md:py-16 bg-white">
-            <div className="container mx-auto px-3 sm:px-4 md:px-6">
+            <div className="w-full max-w-[1536px] mx-auto px-7 sm:px-4 md:px-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                     <div>

@@ -362,7 +362,7 @@ const ProductPage = () => {
     });
 
     return (
-        <div className="px-26 mx-auto py-10">
+        <div className="w-full max-w-[1536px] mx-auto px-7 sm:px-4 md:px-6 py-10">
             {/* Success Toast */}
             {showToast && toastMessage && (
                 <div className="fixed top-6 right-6 z-[9999] px-6 py-4 rounded-lg shadow-lg font-semibold transition-all bg-green-100 text-green-800 border border-green-200">
@@ -870,8 +870,8 @@ const ProductPage = () => {
                             </h2>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                            {similarProducts.slice(0, displayedSimilarCount).map((prod) => {
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                            {similarProducts.map((prod) => {
                                 const lowestPrice = prod.variants && prod.variants.length > 0
                                     ? Math.min(...prod.variants.map(v => Number(v.sp)))
                                     : 0;

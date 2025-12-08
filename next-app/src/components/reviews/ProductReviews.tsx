@@ -326,11 +326,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
             {/* Empty State */}
             {summary.total_reviews === 0 && !loading && (
                 <div className="text-center py-12 bg-gray-50 rounded-2xl">
-                    <div className="text-gray-400 mb-4">
+                    <div className="mb-4 flex justify-center">
                         <StarRating rating={0} size="lg" />
                     </div>
+
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No reviews yet</h3>
                     <p className="text-gray-600 mb-4">Be the first to review this product</p>
+
                     {user && (
                         <button
                             onClick={() => setShowReviewForm(true)}
@@ -340,6 +342,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
                         </button>
                     )}
                 </div>
+
             )}
 
             {/* Delete Confirmation Modal */}
