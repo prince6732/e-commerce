@@ -6,12 +6,13 @@ import { useParams, useRouter } from "next/navigation";
 import imgPlaceholder from "@/public/imagePlaceholder.png";
 import axios from "../../../../../utils/axios";
 import { ProductDetail, ProductVariant } from "@/common/interface";
-import { CheckCircle2, ChevronDown, Layers3, Package, Settings2, Tag, XCircle, ShoppingCart, Plus, Minus, Heart, ShoppingBag } from "lucide-react";
+import { CheckCircle2, ChevronDown, Layers3, Package, Settings2, Tag, XCircle, ShoppingCart, Plus, Minus, Heart, ShoppingBag, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useLike } from "@/context/LikeContext";
 import ProductReviews from "@/components/reviews/ProductReviews";
 import ProductRatingDisplay from "@/components/ui/ProductRatingDisplay";
+import { getSimilarProducts } from "../../../../../utils/similarProducts";
 
 const ProductPage = () => {
     const { id } = useParams();
@@ -30,12 +31,15 @@ const ProductPage = () => {
     const [toastMessage, setToastMessage] = useState<string>("");
     const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
     const [isHovering, setIsHovering] = useState(false);
+    const [isInCart, setIsInCart] = useState(false);
     const [liveRatingSummary, setLiveRatingSummary] = useState<{
         average_rating: number;
         total_reviews: number;
         rating_distribution: { [key: number]: number };
     } | null>(null);
     const [isUpdatingRating, setIsUpdatingRating] = useState(false);
+    const [similarProducts, setSimilarProducts] = useState<ProductDetail[]>([]);
+    const [loadingSimilar, setLoadingSimilar] = useState(false);
 
     const { addToCart, loading: cartLoading } = useCart();
     const { user } = useAuth();
@@ -103,6 +107,9 @@ const ProductPage = () => {
                     if (prod.rating_summary) {
                         setLiveRatingSummary(prod.rating_summary);
                     }
+
+                    // Fetch similar products
+                    fetchSimilarProducts(prod.id);
                 }
             } catch (e) {
                 console.error(e);
@@ -112,6 +119,26 @@ const ProductPage = () => {
         };
         fetchProduct();
     }, [id]);
+
+    const fetchSimilarProducts = async (productId: number) => {
+        setLoadingSimilar(true);
+        try {
+            const products = await getSimilarProducts(productId);
+            const processedProducts = products.map((prod) => ({
+                ...prod,
+                image_url: prod.image_url ? `${baseUrl}${prod.image_url}` : null,
+                variants: prod.variants?.map((v) => ({
+                    ...v,
+                    image_url: v.image_url ? `${baseUrl}${v.image_url}` : null,
+                })) || [],
+            }));
+            setSimilarProducts(processedProducts);
+        } catch (error) {
+            console.error('Error fetching similar products:', error);
+        } finally {
+            setLoadingSimilar(false);
+        }
+    };
 
     useEffect(() => {
         if (!product || !selectedVariant) return;
@@ -224,20 +251,27 @@ const ProductPage = () => {
         if (success) {
             setToastMessage('Item added to cart successfully!');
             setShowToast(true);
+            setIsInCart(true);
         }
 
         setAddingToCart(false);
     };
 
+    const handleViewCart = () => {
+        router.push('/cart');
+    };
+
     const increaseQuantity = () => {
         if (selectedVariant && quantity < selectedVariant.stock) {
             setQuantity(prev => prev + 1);
+            setIsInCart(false);
         }
     };
 
     const decreaseQuantity = () => {
         if (quantity > 1) {
             setQuantity(prev => prev - 1);
+            setIsInCart(false);
         }
     };
 
@@ -264,6 +298,17 @@ const ProductPage = () => {
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
         setZoomPosition({ x, y });
+    };
+
+    const formatSpecificationKey = (key: string): string => {
+        // Convert snake_case or camelCase to Title Case
+        return key
+            .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+            .replace(/[_-]/g, ' ') // Replace underscores and hyphens with spaces
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ')
+            .trim();
     };
 
     if (loading) {
@@ -644,16 +689,21 @@ const ProductPage = () => {
 
                                 {/* Action Buttons */}
                                 <div className="flex gap-3 mt-4">
-                                    {/* Add to Cart Button */}
+                                    {/* Add to Cart / View Cart Button */}
                                     <button
-                                        onClick={handleAddToCart}
+                                        onClick={isInCart ? handleViewCart : handleAddToCart}
                                         disabled={selectedVariant.stock === 0 || addingToCart || cartLoading || !selectedVariant}
-                                        className="flex-1 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2"
+                                        className={`flex-1 px-6 py-3 ${isInCart ? 'bg-blue-500 hover:bg-blue-600' : 'bg-orange-500 hover:bg-orange-600'} text-white font-semibold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2`}
                                     >
                                         {addingToCart || cartLoading ? (
                                             <>
                                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                                 Adding...
+                                            </>
+                                        ) : isInCart ? (
+                                            <>
+                                                <ShoppingCart className="w-5 h-5" />
+                                                View Cart
                                             </>
                                         ) : selectedVariant.stock > 0 ? (
                                             <>
@@ -749,7 +799,7 @@ const ProductPage = () => {
                                                 className={`border-t border-gray-100 hover:bg-gray-50 transition-all ${idx % 2 === 0 ? "bg-gray-50/40" : "bg-white"
                                                     }`}
                                             >
-                                                <td className="p-3 font-semibold w-1/3 text-gray-800">{d.key}</td>
+                                                <td className="p-3 font-semibold w-1/3 text-gray-800">{formatSpecificationKey(d.key)}</td>
                                                 <td className="p-3">{d.value}</td>
                                             </tr>
                                         ))}
@@ -772,6 +822,69 @@ const ProductPage = () => {
                         }}
                     />
                 </div>
+
+                {/* Similar Products Section */}
+                {similarProducts.length > 0 && (
+                    <div className="mt-12">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                <Layers3 className="w-6 h-6 text-orange-500" />
+                                Similar Products
+                            </h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                            {similarProducts.map((prod) => {
+                                const lowestPrice = prod.variants && prod.variants.length > 0
+                                    ? Math.min(...prod.variants.map(v => Number(v.sp)))
+                                    : 0;
+
+                                return (
+                                    <div
+                                        key={prod.id}
+                                        onClick={() => router.push(`/products/${prod.id}`)}
+                                        className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                                    >
+                                        <div className="relative aspect-square overflow-hidden">
+                                            <Image
+                                                src={prod.image_url || imgPlaceholder.src}
+                                                alt={prod.name}
+                                                fill
+                                                className="object-cover group-hover:scale-110 transition-transform duration-300"
+                                            />
+                                        </div>
+                                        <div className="p-3">
+                                            <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1 group-hover:text-orange-600 transition-colors">
+                                                {prod.name}
+                                            </h3>
+                                            {prod.rating_summary && prod.rating_summary.total_reviews > 0 && (
+                                                <div className="mb-1">
+                                                    <ProductRatingDisplay
+                                                        averageRating={prod.rating_summary.average_rating}
+                                                        reviewCount={prod.rating_summary.total_reviews}
+                                                        size="sm"
+                                                        showCount={false}
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-orange-600 font-bold text-base">
+                                                    ₹{lowestPrice}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {loadingSimilar && (
+                            <div className="text-center py-8">
+                                <div className="w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto"></div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

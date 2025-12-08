@@ -55,14 +55,18 @@ const RatingSummary: React.FC<RatingSummaryProps> = ({
             <div
               key={rating}
               onClick={() => handleRatingClick(rating)}
-              className={`flex items-center gap-3 p-2 rounded-xl transition-all cursor-pointer ${isSelected
+              className={`flex items-center gap-3 p-2 rounded-xl transition-all cursor-pointer group relative ${isSelected
                 ? 'bg-yellow-200/60 shadow-sm'
                 : 'hover:bg-yellow-100/50'
                 } ${onRatingFilter ? 'cursor-pointer' : 'cursor-default'}`}
             >
-              <div className="flex items-center gap-1 min-w-[80px]">
+              <div className="flex items-center gap-1 min-w-[40px]">
                 <span className="text-sm font-medium text-gray-700">{rating}</span>
-                <StarRating rating={1} size="sm" />
+              </div>
+
+              {/* Stars shown on hover only */}
+              <div className="absolute left-10 top-1/2 -translate-y-1/2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 bg-white px-2 py-1 rounded-lg shadow-md z-10">
+                <StarRating rating={rating} size="sm" />
               </div>
 
               <div className="flex-1 relative">

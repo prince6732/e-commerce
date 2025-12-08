@@ -41,6 +41,7 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/get-product/{product}', [ProductController::class, 'getProductById']);
 Route::get('/search-products', [ProductController::class, 'search']);
 Route::get('/get-products-by-category/{categoryId}', [ProductController::class, 'getSubcategoryProduct']);
+Route::get('/get-similar-products/{productId}', [ProductController::class, 'getSimilarProducts']);
 
 // Public category routes (for navigation)
 Route::get('/categories', [CategoryController::class, 'index']);

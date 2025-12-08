@@ -487,6 +487,56 @@ class ProductController extends Controller
         }
     }
 
+    public function getSimilarProducts($productId)
+    {
+        try {
+            $product = Product::findOrFail($productId);
+            
+            // Get similar products based on category and subcategory
+            $similarProducts = Product::with(['category', 'brand', 'variants'])
+                ->where('id', '!=', $productId)
+                ->where('category_id', $product->category_id)
+                ->active()
+                ->limit(12)
+                ->get();
+
+            // If no products found in same category, get from parent category
+            if ($similarProducts->isEmpty() && $product->category && $product->category->parent_id) {
+                $similarProducts = Product::with(['category', 'brand', 'variants'])
+                    ->where('id', '!=', $productId)
+                    ->whereHas('category', function ($query) use ($product) {
+                        $query->where('parent_id', $product->category->parent_id);
+                    })
+                    ->active()
+                    ->limit(12)
+                    ->get();
+            }
+
+            $similarProducts->transform(function ($prod) {
+                if (empty($prod->image_url) && $prod->variants->isNotEmpty()) {
+                    $firstVariantWithImage = $prod->variants->firstWhere('image_url', '!=', null);
+                    if ($firstVariantWithImage) {
+                        $prod->image_url = $firstVariantWithImage->image_url;
+                    }
+                }
+                $prod->append('rating_summary');
+                return $prod;
+            });
+
+            return response()->json([
+                'res'       => 'success',
+                'message'   => 'Similar products fetched successfully.',
+                'products'  => $similarProducts,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'res'     => 'error',
+                'message' => 'Failed to fetch similar products.',
+                'errors'  => [$e->getMessage()],
+            ], 500);
+        }
+    }
+
     public function search(Request $request)
     {
         try {

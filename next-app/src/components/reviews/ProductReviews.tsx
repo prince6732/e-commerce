@@ -210,7 +210,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
                 )}
             </div>
 
-            {/* Rating Summary and Review Form */}
+            {/* Rating Summary and User Review Display */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1">
                     <RatingSummary
@@ -221,23 +221,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
                 </div>
 
                 <div className="lg:col-span-2">
-                    {showReviewForm && (
-                        <ReviewForm
-                            productId={productId}
-                            initialData={editingReview ? {
-                                rating: editingReview.rating,
-                                title: editingReview.title || '',
-                                review_text: editingReview.review_text || ''
-                            } : undefined}
-                            isEditing={!!editingReview}
-                            onSubmit={handleFormSubmit}
-                            onCancel={handleCancelForm}
-                            loading={loading}
-                        />
-                    )}
-
                     {/* User's Review Display */}
-                    {userReview && !showReviewForm && (
+                    {userReview && (
                         <div className="mb-6">
                             <h3 className="text-lg font-semibold text-gray-900 mb-3">Your Review</h3>
                             <ReviewCard
@@ -250,6 +235,28 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
                     )}
                 </div>
             </div>
+
+            {/* Review Form Modal */}
+            {showReviewForm && (
+                <Modal
+                    isOpen={showReviewForm}
+                    onClose={handleCancelForm}
+                    title={editingReview ? "Edit Your Review" : "Write a Review"}
+                >
+                    <ReviewForm
+                        productId={productId}
+                        initialData={editingReview ? {
+                            rating: editingReview.rating,
+                            title: editingReview.title || '',
+                            review_text: editingReview.review_text || ''
+                        } : undefined}
+                        isEditing={!!editingReview}
+                        onSubmit={handleFormSubmit}
+                        onCancel={handleCancelForm}
+                        loading={loading}
+                    />
+                </Modal>
+            )}
 
             {/* Reviews Section */}
             {summary.total_reviews > 0 && (
