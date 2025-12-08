@@ -36,6 +36,14 @@ export interface UserOrder {
     status: string;
     payment_status: string;
     items_count: number;
+    items?: {
+        id: number;
+        product_name: string;
+        product_image: string | null;
+        quantity: number;
+        price: number;
+        total: number;
+    }[];
     created_at: string;
     formatted_date: string;
 }

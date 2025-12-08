@@ -83,6 +83,16 @@ class UserController extends Controller
                         'status' => $order->status,
                         'payment_status' => $order->payment_status,
                         'items_count' => $order->orderItems->count(),
+                        'items' => $order->orderItems->map(function ($item) {
+                            return [
+                                'id' => $item->id,
+                                'product_name' => $item->product->name ?? 'Unknown Product',
+                                'product_image' => $item->product->image_url ?? null,
+                                'quantity' => $item->quantity,
+                                'price' => $item->price,
+                                'total' => $item->total,
+                            ];
+                        }),
                         'created_at' => $order->created_at,
                         'formatted_date' => $order->created_at->format('M d, Y'),
                     ];

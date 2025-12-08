@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useLoader } from "@/context/LoaderContext";
-import { FaArrowLeft, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCalendar, FaShoppingBag, FaStar, FaHeart, FaDollarSign, FaBan, FaCheckCircle } from "react-icons/fa";
+import { FaArrowLeft, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCalendar, FaShoppingBag, FaStar, FaHeart, FaDollarSign, FaBan, FaCheckCircle, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Image from "next/image";
 import ErrorMessage from "@/components/(sheared)/ErrorMessage";
 import SuccessMessage from "@/components/(sheared)/SuccessMessage";
@@ -24,6 +24,7 @@ export default function UserDetailPage() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+    const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
 
     const uploadUrl = `${process.env.NEXT_PUBLIC_UPLOAD_BASE}/storage` || "http://localhost:8000";
 
@@ -51,7 +52,7 @@ export default function UserDetailPage() {
 
     const handleToggleStatus = async () => {
         if (!user) return;
-        
+
         showLoader();
         try {
             const response = await toggleUserStatus(user.id);
@@ -62,6 +63,14 @@ export default function UserDetailPage() {
             setErrorMessage(err.message || "Failed to update user status");
         } finally {
             hideLoader();
+        }
+    };
+
+    const toggleOrder = (orderId: number) => {
+        if (expandedOrderId === orderId) {
+            setExpandedOrderId(null);
+        } else {
+            setExpandedOrderId(orderId);
         }
     };
 
@@ -185,11 +194,10 @@ export default function UserDetailPage() {
                         <div className="mt-4">
                             <button
                                 onClick={() => setIsBlockModalOpen(true)}
-                                className={`px-6 py-2.5 rounded-lg font-medium transition ${
-                                    user.status
+                                className={`px-6 py-2.5 rounded-lg font-medium transition ${user.status
                                         ? 'bg-red-500 hover:bg-red-600 text-white'
                                         : 'bg-green-500 hover:bg-green-600 text-white'
-                                }`}
+                                    }`}
                             >
                                 {user.status ? 'Block User' : 'Unblock User'}
                             </button>
@@ -257,30 +265,67 @@ export default function UserDetailPage() {
                                     <th className="px-4 py-3 text-left">Amount</th>
                                     <th className="px-4 py-3 text-left">Status</th>
                                     <th className="px-4 py-3 text-left">Payment</th>
+                                    <th className="px-4 py-3 text-left">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {orders.map((order) => (
-                                    <tr key={order.id} className="hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-medium">{order.order_number}</td>
-                                        <td className="px-4 py-3">{order.formatted_date}</td>
-                                        <td className="px-4 py-3">{order.items_count}</td>
-                                        <td className="px-4 py-3 font-semibold">${order.total_amount}</td>
-                                        <td className="px-4 py-3">
-                                            <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
-                                                {order.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${
-                                                order.payment_status === 'completed' 
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-yellow-100 text-yellow-700'
-                                            }`}>
-                                                {order.payment_status}
-                                            </span>
-                                        </td>
-                                    </tr>
+                                    <>
+                                        <tr key={order.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleOrder(order.id)}>
+                                            <td className="px-4 py-3 font-medium">{order.order_number}</td>
+                                            <td className="px-4 py-3">{order.formatted_date}</td>
+                                            <td className="px-4 py-3">{order.items_count}</td>
+                                            <td className="px-4 py-3 font-semibold">${order.total_amount}</td>
+                                            <td className="px-4 py-3">
+                                                <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className={`px-2 py-1 rounded-full text-xs ${order.payment_status === 'paid'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-yellow-100 text-yellow-700'
+                                                    }`}>
+                                                    {order.payment_status}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <button className="text-gray-500 hover:text-gray-700">
+                                                    {expandedOrderId === order.id ? <FaChevronUp /> : <FaChevronDown />}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {expandedOrderId === order.id && (
+                                            <tr className="bg-gray-50">
+                                                <td colSpan={7} className="px-4 py-4">
+                                                    <div className="space-y-3">
+                                                        <h4 className="font-semibold text-gray-700 text-xs uppercase">Order Items</h4>
+                                                        <div className="grid gap-3">
+                                                            {order.items?.map((item) => (
+                                                                <div key={item.id} className="flex items-center gap-4 bg-white p-3 rounded border border-gray-200">
+                                                                    {item.product_image && (
+                                                                        <Image
+                                                                            src={getImageUrl(item.product_image) || ''}
+                                                                            alt={item.product_name}
+                                                                            width={50}
+                                                                            height={50}
+                                                                            className="rounded object-cover"
+                                                                            unoptimized
+                                                                        />
+                                                                    )}
+                                                                    <div className="flex-1">
+                                                                        <p className="font-medium text-gray-900">{item.product_name}</p>
+                                                                        <p className="text-sm text-gray-500">Qty: {item.quantity} × ${item.price}</p>
+                                                                    </div>
+                                                                    <p className="font-semibold text-gray-900">${item.total}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </>
                                 ))}
                             </tbody>
                         </table>
@@ -324,11 +369,10 @@ export default function UserDetailPage() {
                                             <p className="text-sm text-gray-600 mt-1">{review.review_text}</p>
                                         )}
                                         <div className="flex items-center gap-3 mt-2">
-                                            <span className={`text-xs px-2 py-1 rounded ${
-                                                review.is_approved 
+                                            <span className={`text-xs px-2 py-1 rounded ${review.is_approved
                                                     ? 'bg-green-100 text-green-700'
                                                     : 'bg-yellow-100 text-yellow-700'
-                                            }`}>
+                                                }`}>
                                                 {review.is_approved ? 'Approved' : 'Pending'}
                                             </span>
                                             <span className="text-xs text-gray-500">
@@ -384,7 +428,7 @@ export default function UserDetailPage() {
                         Are you sure you want to {user.status ? 'block' : 'unblock'}{' '}
                         <span className="font-semibold">{user.name}</span>?
                     </p>
-                    
+
                     {user.status && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                             <p className="text-sm text-yellow-800 font-medium">⚠️ This will:</p>
@@ -405,11 +449,10 @@ export default function UserDetailPage() {
                         </button>
                         <button
                             onClick={handleToggleStatus}
-                            className={`px-4 py-2 rounded-lg transition text-white ${
-                                user.status
+                            className={`px-4 py-2 rounded-lg transition text-white ${user.status
                                     ? 'bg-red-500 hover:bg-red-600'
                                     : 'bg-green-500 hover:bg-green-600'
-                            }`}
+                                }`}
                         >
                             {user.status ? 'Block User' : 'Unblock User'}
                         </button>
