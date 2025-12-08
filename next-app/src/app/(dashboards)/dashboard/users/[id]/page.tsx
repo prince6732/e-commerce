@@ -26,7 +26,7 @@ export default function UserDetailPage() {
     const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
     const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
 
-    const uploadUrl = `${process.env.NEXT_PUBLIC_UPLOAD_BASE}/storage` || "http://localhost:8000";
+    const uploadUrl = `${process.env.NEXT_PUBLIC_UPLOAD_BASE}` || "http://localhost:8000";
 
     useEffect(() => {
         if (userId) {
@@ -81,6 +81,13 @@ export default function UserDetailPage() {
         return `${cleanBase}/${cleanPath}`;
     };
 
+    const getUserImageUrl = (imagePath: string | null) => {
+        if (!imagePath) return null;
+        const cleanBase = uploadUrl.replace(/\/+$/, "");
+        const cleanPath = imagePath.replace(/^\/+/, "").replace(/\\/g, "/");
+        return `${cleanBase}/storage/${cleanPath}`;
+    };
+
     if (!user) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -117,7 +124,7 @@ export default function UserDetailPage() {
                     <div className="flex-shrink-0">
                         {user.profile_picture ? (
                             <Image
-                                src={getImageUrl(user.profile_picture) || ''}
+                                src={getUserImageUrl(user.profile_picture) || ''}
                                 alt={user.name}
                                 width={150}
                                 height={150}
@@ -195,8 +202,8 @@ export default function UserDetailPage() {
                             <button
                                 onClick={() => setIsBlockModalOpen(true)}
                                 className={`px-6 py-2.5 rounded-lg font-medium transition ${user.status
-                                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                                        : 'bg-green-500 hover:bg-green-600 text-white'
+                                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                                    : 'bg-green-500 hover:bg-green-600 text-white'
                                     }`}
                             >
                                 {user.status ? 'Block User' : 'Unblock User'}
@@ -283,8 +290,8 @@ export default function UserDetailPage() {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className={`px-2 py-1 rounded-full text-xs ${order.payment_status === 'paid'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-yellow-100 text-yellow-700'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-yellow-100 text-yellow-700'
                                                     }`}>
                                                     {order.payment_status}
                                                 </span>
@@ -370,8 +377,8 @@ export default function UserDetailPage() {
                                         )}
                                         <div className="flex items-center gap-3 mt-2">
                                             <span className={`text-xs px-2 py-1 rounded ${review.is_approved
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-yellow-100 text-yellow-700'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-yellow-100 text-yellow-700'
                                                 }`}>
                                                 {review.is_approved ? 'Approved' : 'Pending'}
                                             </span>
@@ -450,8 +457,8 @@ export default function UserDetailPage() {
                         <button
                             onClick={handleToggleStatus}
                             className={`px-4 py-2 rounded-lg transition text-white ${user.status
-                                    ? 'bg-red-500 hover:bg-red-600'
-                                    : 'bg-green-500 hover:bg-green-600'
+                                ? 'bg-red-500 hover:bg-red-600'
+                                : 'bg-green-500 hover:bg-green-600'
                                 }`}
                         >
                             {user.status ? 'Block User' : 'Unblock User'}
