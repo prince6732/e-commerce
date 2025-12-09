@@ -600,13 +600,12 @@ const OrdersPage = () => {
                                             {order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                                order.payment_status === 'paid' 
-                                                    ? 'bg-green-100 text-green-800' 
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${order.payment_status === 'paid'
+                                                    ? 'bg-green-100 text-green-800'
                                                     : order.payment_status === 'failed'
-                                                    ? 'bg-red-100 text-red-800'
-                                                    : 'bg-yellow-100 text-yellow-800'
-                                            }`}>
+                                                        ? 'bg-red-100 text-red-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
+                                                }`}>
                                                 {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
                                             </span>
                                         </td>
@@ -762,6 +761,7 @@ const OrdersPage = () => {
                                                 alt={item.product.name}
                                                 fill
                                                 className="object-cover"
+                                                unoptimized
                                             />
                                         </div>
                                         <div className="flex-1">

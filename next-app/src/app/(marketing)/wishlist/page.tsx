@@ -216,6 +216,7 @@ const LikesPage = () => {
                                         src={getProductImageUrl(product)}
                                         alt={product.name}
                                         fill
+                                        unoptimized
                                         className="object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
                                         onClick={() => handleProductClick(product.id)}
                                     />

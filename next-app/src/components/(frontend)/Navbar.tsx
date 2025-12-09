@@ -333,7 +333,7 @@ const Navbar = () => {
                 }}
                 className="font-bold text-2xl"
               >
-                <Image src={logoText} alt="Zelton Logo" className="h-8 w-auto object-contain" />
+                <Image src={logoText} unoptimized alt="Zelton Logo" className="h-8 w-auto object-contain" />
               </span>
             </div>
           </Link>
@@ -387,7 +387,7 @@ const Navbar = () => {
                             ? `${basePath}${cat.image.replace(/\\/g, "/")}`
                             : null;
                           const plainDescription = cat?.description
-                            ? cat.description.replace(/<[^>]+>/g, "").slice(0, 80) 
+                            ? cat.description.replace(/<[^>]+>/g, "").slice(0, 80)
                             : "No Description";
 
                           return (

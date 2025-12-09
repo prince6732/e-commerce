@@ -11,6 +11,7 @@ import {
   Tag,
   Layers,
   Palette,
+  Mail,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
@@ -22,11 +23,12 @@ const navLinks = [
   { href: "/", label: "Home", icon: Home, roles: ["Admin"] },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["Admin"] },
   { href: "/dashboard/users", label: "Users", icon: Users, roles: ["Admin"] },
+  { href: "/dashboard/brands", label: "Brands", icon: Tag, roles: ["Admin"] },
+  { href: "/dashboard/attributes", label: "Attributes", icon: Layers, roles: ["Admin"] },
   { href: "/dashboard/categories", label: "Categories", icon: FolderTree, roles: ["Admin"] },
   { href: "/dashboard/orders", label: "Orders", icon: FolderTree, roles: ["Admin"] },
   { href: "/dashboard/sliders", label: "Sliders", icon: Images, roles: ["Admin"] },
-  { href: "/dashboard/brands", label: "Brands", icon: Tag, roles: ["Admin"] },
-  { href: "/dashboard/attributes", label: "Attributes", icon: Layers, roles: ["Admin"] },
+  { href: "/dashboard/contact-messages", label: "Contact Messages", icon: Mail, roles: ["Admin"] },
   { href: "/dashboard/themes", label: "Themes", icon: Palette, roles: ["Admin"] },
 ];
 
@@ -63,9 +65,9 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       >
         <Link href="/" className="logo italic font-bold h-[1.5rem] text-4xl text-gray-800 flex items-center">
           {isOpen ? (
-            <Image src={logoText} alt="Logo Text" className="h-[1.5rem] w-auto object-contain" />
+            <Image src={logoText} unoptimized alt="Logo Text" className="h-[1.5rem] w-auto object-contain" />
           ) : (
-            <Image src={logo} alt="Logo Icon" className="h-[2rem] w-auto object-contain" />
+            <Image src={logo} unoptimized alt="Logo Icon" className="h-[2rem] w-auto object-contain" />
           )}
         </Link>
       </div>

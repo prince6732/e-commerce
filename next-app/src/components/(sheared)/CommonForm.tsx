@@ -219,7 +219,7 @@ export default function CommonForm({
                         className="w-full py-3 px-5 rounded-2xl border file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-lg file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                     />
                     {errors.image && <p className="text-xs text-red-500">{String(errors.image.message || '')}</p>}
-                    {previewImage && <Image src={previewImage} width={600} height={600} alt="Image Preview" className="mt-2 h-24 w-24 rounded object-cover border" />}
+                    {previewImage && <Image src={previewImage} unoptimized width={600} height={600} alt="Image Preview" className="mt-2 h-24 w-24 rounded object-cover border" />}
                 </div>
 
                 {/* Secondary Image */}
@@ -246,7 +246,7 @@ export default function CommonForm({
                         className="w-full py-3 px-5 rounded-2xl border file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-lg file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                     />
                     {errors.secondary_image && <p className="text-xs text-red-500">{String(errors.secondary_image.message || '')}</p>}
-                    {previewSecondary && <Image src={previewSecondary} width={1600} height={600} alt="Secondary Preview" className="mt-2 h-24 w-64 rounded object-cover border" />}
+                    {previewSecondary && <Image src={previewSecondary} unoptimized width={1600} height={600} alt="Secondary Preview" className="mt-2 h-24 w-64 rounded object-cover border" />}
                 </div>
 
                 {/* Attributes */}

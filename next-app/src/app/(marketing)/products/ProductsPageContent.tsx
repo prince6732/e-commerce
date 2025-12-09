@@ -354,6 +354,7 @@ const ProductsPage = () => {
                                                                     src={`${basePath}${category.image}`}
                                                                     alt={category.name}
                                                                     fill
+                                                                    unoptimized
                                                                     className="object-cover"
                                                                 />
                                                             </div>
@@ -403,6 +404,7 @@ const ProductsPage = () => {
                                                                                     alt={subcategory.name}
                                                                                     fill
                                                                                     className="object-cover"
+                                                                                    unoptimized
                                                                                 />
                                                                             </div>
                                                                         )}
@@ -467,6 +469,7 @@ const ProductsPage = () => {
                                                     src={product.image_url ? `${basePath}${product.image_url}` : imgPlaceholder}
                                                     alt={product.name}
                                                     fill
+                                                    unoptimized
                                                     className="object-cover group-hover:scale-110 transition-transform duration-300"
                                                 />
                                             </div>

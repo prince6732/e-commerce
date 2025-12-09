@@ -182,7 +182,7 @@ const CheckoutSingle = () => {
             if (response.data.success && response.data.status === 'PAID') {
                 setPaymentStatus('success');
                 setPaymentMessage("Payment successful! Redirecting to orders...");
-                
+
                 // Remove product from cart if it was there (optional, but good practice)
                 // await removeProductFromCart(); 
 
@@ -195,7 +195,7 @@ const CheckoutSingle = () => {
                 setTimeout(() => {
                     setShowPaymentModal(false);
                     // Remove query params but keep product params if possible, or redirect to cart
-                    router.replace('/cart'); 
+                    router.replace('/cart');
                 }, 3000);
             }
         } catch (error) {
@@ -296,7 +296,7 @@ const CheckoutSingle = () => {
 
                     if (response.data.success) {
                         const { payment_session_id } = response.data;
-                        
+
                         const cashfree = new (window as any).Cashfree({
                             mode: "production"
                         });
@@ -709,6 +709,7 @@ const CheckoutSingle = () => {
                                                     src={`${basePath}${variant.image_url || product.image_url || imgPlaceholder.src}`}
                                                     alt={product.name}
                                                     fill
+                                                    unoptimized
                                                     className="object-cover"
                                                 />
                                             </div>
@@ -863,6 +864,7 @@ const CheckoutSingle = () => {
                                             src={`${basePath}${variant.image_url || product.image_url || imgPlaceholder.src}`}
                                             alt={product.name}
                                             fill
+                                            unoptimized
                                             className="object-cover"
                                         />
                                     </div>
@@ -939,7 +941,7 @@ const CheckoutSingle = () => {
             {/* Payment Status Modal */}
             <Modal
                 isOpen={showPaymentModal}
-                onClose={() => {}} // Prevent closing manually while verifying
+                onClose={() => { }} // Prevent closing manually while verifying
                 title={paymentStatus === 'verifying' ? "Verifying Payment" : paymentStatus === 'success' ? "Payment Successful" : "Payment Failed"}
                 width="max-w-md"
             >

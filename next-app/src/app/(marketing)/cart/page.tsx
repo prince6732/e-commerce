@@ -222,6 +222,7 @@ const CartPage = () => {
                                                     src={`${basePath}${item.variant.image_url || item.product.image_url || imgPlaceholder.src}`}
                                                     alt={item.product.name}
                                                     fill
+                                                    unoptimized
                                                     className="object-cover hover:scale-105 transition-transform duration-300"
                                                 />
                                             </div>

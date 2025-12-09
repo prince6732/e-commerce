@@ -660,6 +660,7 @@ function CheckoutPageContent() {
                                                             src={`${basePath}${item.variant.image_url || item.product.image_url || imgPlaceholder.src}`}
                                                             alt={item.product.name}
                                                             fill
+                                                            unoptimized
                                                             className="object-cover"
                                                         />
                                                     </div>
@@ -824,6 +825,7 @@ function CheckoutPageContent() {
                                                 src={`${basePath}${item.variant.image_url || item.product.image_url || imgPlaceholder.src}`}
                                                 alt={item.product.name}
                                                 fill
+                                                unoptimized
                                                 className="object-cover"
                                             />
                                         </div>

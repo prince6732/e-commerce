@@ -404,6 +404,7 @@ const ProductPage = () => {
                             src={mainImage || imgPlaceholder.src}
                             alt={product.name}
                             fill
+                            unoptimized
                             className="object-cover"
                         />
 
@@ -435,7 +436,7 @@ const ProductPage = () => {
                                     fill
                                     className="object-cover"
                                     quality={100}
-                                    unoptimized={true}
+                                    unoptimized
                                 />
                             </div>
                         </div>
@@ -454,6 +455,7 @@ const ProductPage = () => {
                                     src={img}
                                     alt={`thumb-${idx}`}
                                     fill
+                                    unoptimized
                                     className="object-cover"
                                 />
                             </div>
@@ -906,6 +908,7 @@ const ProductPage = () => {
                                             <Image
                                                 src={prod.image_url || imgPlaceholder.src}
                                                 alt={prod.name}
+                                                unoptimized
                                                 fill
                                                 className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                                             />

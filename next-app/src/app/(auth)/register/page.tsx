@@ -149,7 +149,7 @@ export default function Home() {
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-lg p-8 sm:p-10">
         {/* Header */}
         <div className="text-center mb-8">
-          {logo && <Image src={logo} alt="logo" className="w-28 mx-auto mb-3" />}
+          {logo && <Image src={logo} unoptimized alt="logo" className="w-28 mx-auto mb-3" />}
           <h1 className="text-gray-800 font-extrabold text-3xl flex justify-center items-center gap-2">
             <UserPlus className="text-orange-500" />
             Create Account

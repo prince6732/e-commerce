@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
             <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8 sm:p-10">
                 {/* Logo & Title */}
                 <div className="text-center mb-8">
-                    {logo && <Image src={logo} alt="logo" className="w-28 mx-auto mb-3" />}
+                    {logo && <Image src={logo} unoptimized alt="logo" className="w-28 mx-auto mb-3" />}
                     <h1 className="text-gray-800 font-extrabold text-3xl flex justify-center items-center gap-2">
                         <KeyRound className="text-orange-500" />
                         Reset <span className="text-orange-500">Password</span>

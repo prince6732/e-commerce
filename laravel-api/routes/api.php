@@ -94,6 +94,9 @@ Route::post('/confirm-delivery/{token}', [OrderController::class, 'confirmDelive
 // Test Cashfree credentials (for debugging - remove in production)
 Route::get('/test-cashfree', [PaymentController::class, 'testCredentials']);
 
+// Contact us route (public)
+Route::post('/contact-us', [App\Http\Controllers\ContactMessageController::class, 'store']);
+
 // ==========================================
 // PROTECTED ROUTES (Authentication Required)
 // ==========================================
@@ -113,6 +116,12 @@ Route::middleware(['auth:sanctum', 'check.user.status'])->group(function () {
         Route::post('/admin/users/{id}/block', [UserController::class, 'blockUser']);
         Route::post('/admin/users/{id}/unblock', [UserController::class, 'unblockUser']);
         Route::post('/admin/users/{id}/toggle-status', [UserController::class, 'toggleStatus']);
+
+        // ========== ADMIN: CONTACT MESSAGES ==========
+        Route::get('/admin/contact-messages', [App\Http\Controllers\ContactMessageController::class, 'index']);
+        Route::get('/admin/contact-messages/{id}', [App\Http\Controllers\ContactMessageController::class, 'show']);
+        Route::patch('/admin/contact-messages/{id}/mark-read', [App\Http\Controllers\ContactMessageController::class, 'markAsRead']);
+        Route::delete('/admin/contact-messages/{id}', [App\Http\Controllers\ContactMessageController::class, 'destroy']);
     });
 
     // ========== USER PROFILE ==========

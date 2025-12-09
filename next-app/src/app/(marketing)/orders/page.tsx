@@ -404,6 +404,7 @@ const OrdersPage = () => {
                                                             src={`${basePath}${item.variant.image_url || item.product.image_url || imgPlaceholder.src}`}
                                                             alt={item.product.name}
                                                             fill
+                                                            unoptimized
                                                             className="object-cover"
                                                         />
                                                     </div>
@@ -552,6 +553,7 @@ const OrdersPage = () => {
                                                         src={`${basePath}${item.variant.image_url || item.product.image_url || imgPlaceholder.src}`}
                                                         alt={item.product.name}
                                                         fill
+                                                        unoptimized
                                                         className="object-cover"
                                                     />
                                                     <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">

@@ -10,7 +10,7 @@ const Footer = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         <div className="lg:flex items-start flex-col">
                             {/* <a href="#">
-                                <Image src={logo} alt="logo" className="w-48" />
+                                <Image src={logo} unoptimized alt="logo" className="w-48" />
                             </a> */}
                             <h2 className='text-white text-[5vh]  font-extrabold italic' >Zelton</h2>
                             <p className='text-white lg:text-base text-sm mt-5'>
@@ -76,7 +76,10 @@ const Footer = () => {
                             <h4 className="text-base mb-4 text-white">Information</h4>
                             <ul className="space-y-4">
                                 <li>
-                                    <Link href="/about_us" className="text-slate-400 hover:text-white text-sm">About Us</Link>
+                                    <Link href="/about-us" className="text-slate-400 hover:text-white text-sm">About Us</Link>
+                                </li>
+                                <li>
+                                    <Link href="/contact-us" className="text-slate-400 hover:text-white text-sm">Contact Us</Link>
                                 </li>
                                 <li>
                                     <Link href="/terms-conditions" className="text-slate-400 hover:text-white text-sm">Terms &amp; Conditions</Link >
@@ -84,19 +87,16 @@ const Footer = () => {
                                 <li>
                                     <Link href="/privacy-policy" className="text-slate-400 hover:text-white text-sm">Privacy Policy</Link>
                                 </li>
-                                <li>
-                                    <Link href="/refund-policy" className="text-slate-400 hover:text-white text-sm">Refund & Cancellation Policy</Link>
-                                </li>
                             </ul>
                         </div>
                     </div>
 
-                    <p className="text-slate-400 text-sm mt-10">Developed By @ArrayLog</p>
+                    <p className="text-slate-400 text-sm mt-10">Developed By @TopNTech</p>
                 </div>
                 <br />
                 <hr className='bg-white/50 ' />
                 <p className='text-slate-400 text-center pt-10 text-sm capitalize ' >
-                    ALL RIGHT RESERVED WITH DEPTHROUTE TECHNOLOGY PRIVATE LIMITED
+                    ALL RIGHT RESERVED WITH TOPNTECH TECHNOLOGY PRIVATE LIMITED
                 </p>
             </footer>
         </>

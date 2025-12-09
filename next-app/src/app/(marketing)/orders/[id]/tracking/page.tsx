@@ -560,6 +560,7 @@ const OrderTrackingPage = () => {
                                                                 alt={item.product.name}
                                                                 width={48}
                                                                 height={48}
+                                                                unoptimized
                                                                 className="object-cover w-full h-full"
                                                             />
                                                         </div>
