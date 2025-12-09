@@ -41,8 +41,8 @@ const ProductPage = () => {
     const { user } = useAuth();
     const { toggleLike, isLiked, likesLoading } = useLike();
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-    const baseUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.zelton.co.in/api";
+    const baseUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
     const fetchLiveRatingSummary = async (showLoading = false) => {
         if (!id) return;

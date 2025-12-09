@@ -83,7 +83,7 @@ const schema = yup.object({
 
 type FormData = yup.InferType<typeof schema>;
 
-const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE ?? "https://localhost:8000";
+const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE ?? "https://api.zelton.co.in";
 
 function VariantProductForm() {
     const [preview, setPreview] = useState<string | null>(null);

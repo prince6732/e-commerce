@@ -21,7 +21,7 @@ function Users() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [brandToDelete, setBrandToDelete] = useState<number | null>(null);
 
-    const uploadUrl = (`${process.env.NEXT_PUBLIC_UPLOAD_BASE}/storage`) || "http://localhost:8000";
+    const uploadUrl = (`${process.env.NEXT_PUBLIC_UPLOAD_BASE}/storage`) || "https://api.zelton.co.in";
 
     useEffect(() => {
         getAllBrands();

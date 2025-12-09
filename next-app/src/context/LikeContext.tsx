@@ -33,7 +33,7 @@ export const LikeProvider: React.FC<LikeProviderProps> = ({ children }) => {
     const [likesLoading, setLikesLoading] = useState(false);
     const [likesCount, setLikesCount] = useState<{ [productId: number]: number }>({});
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.zelton.co.in/api";
 
     // Get token from localStorage
     const getToken = () => {

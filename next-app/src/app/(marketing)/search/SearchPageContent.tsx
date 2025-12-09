@@ -6,7 +6,7 @@ import { RiSearchLine, RiGridLine, RiListUnordered, RiArrowLeftLine } from 'reac
 import axios from '../../../../utils/axios';
 import Link from 'next/link';
 
-const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
 interface Product {
     id: number;

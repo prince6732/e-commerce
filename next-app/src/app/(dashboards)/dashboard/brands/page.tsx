@@ -47,7 +47,7 @@ function AdminBrandManagement() {
     const router = useRouter();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [brandToDelete, setBrandToDelete] = useState<number | null>(null);
-    const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+    const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
     const config = useMemo(
         () => ({

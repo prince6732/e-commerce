@@ -17,7 +17,7 @@ type Props = {
     attribute: CategoryAttribute;
 };
 
-const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE ?? "https://localhost:8000";
+const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE ?? "https://api.zelton.co.in";
 
 function VariantOption({ itemIndex, control, register, setValue, watch, errors, attributeOneHasImages, attributeTwoHasImages, attribute }: Props) {
     const { fields, append, remove } = useFieldArray({

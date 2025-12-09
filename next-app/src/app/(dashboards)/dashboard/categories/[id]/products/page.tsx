@@ -10,7 +10,7 @@ import { getCategoryById } from "../../../../../../../utils/category";
 import { getSubcategoryProducts } from "../../../../../../../utils/product";
 
 const basePath: string =
-    `${process.env.NEXT_PUBLIC_UPLOAD_BASE}` || "https://localhost:8000";
+    `${process.env.NEXT_PUBLIC_UPLOAD_BASE}` || "https://api.zelton.co.in";
 
 export default function Products() {
     const [category, setCategory] = useState<Category | null>(null);

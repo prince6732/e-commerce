@@ -6,7 +6,7 @@ import { Product, ApiResponse } from "@/common/interface";
 import { getProductById } from "../../../../../../../../../utils/product";
 
 const basePath: string =
-    process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://localhost:8000";
+    process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
 export default function ProductDetailPage() {
     const params = useParams();

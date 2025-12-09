@@ -61,7 +61,7 @@ export default function HomeUI() {
   const ytIframeRef = React.useRef<HTMLIFrameElement>(null);
   const router = useRouter();
 
-  const baseUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+  const baseUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
   useEffect(() => {
     fetchProducts();

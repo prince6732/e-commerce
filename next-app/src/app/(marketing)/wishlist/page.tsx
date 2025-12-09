@@ -56,7 +56,7 @@ const LikesPage = () => {
     const [loading, setLoading] = useState(true);
     const [removingId, setRemovingId] = useState<number | null>(null);
 
-    const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+    const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
     useEffect(() => {
         if (authLoading) return;

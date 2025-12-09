@@ -6,7 +6,7 @@ import { CheckCircle, Package, Truck, Clock, MapPin, Calendar, User, Mail, Phone
 import Modal from "@/components/(sheared)/Modal";
 import imgPlaceholder from "@/public/imagePlaceholder.png";
 
-const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
 interface OrderItem {
     id: number;

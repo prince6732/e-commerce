@@ -177,7 +177,7 @@ const ProfilePage = () => {
 
       // Initialize profile picture URL if exists
       if (user.profile_picture) {
-        const baseUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || 'http://localhost:8000';
+        const baseUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || 'https://api.zelton.co.in';
         setProfilePictureUrl(`${baseUrl}/storage/${user.profile_picture}`);
       }
     }
@@ -377,7 +377,7 @@ const ProfilePage = () => {
                 <div className="w-24 h-24 rounded-full overflow-hidden backdrop-blur-sm border-4 border-white/20">
                   {profilePictureUrl || user?.profile_picture ? (
                     <img
-                      src={profilePictureUrl || `${process.env.NEXT_PUBLIC_UPLOAD_BASE || 'http://localhost:8000'}/storage/${user?.profile_picture}`}
+                      src={profilePictureUrl || `${process.env.NEXT_PUBLIC_UPLOAD_BASE || 'https://api.zelton.co.in'}/storage/${user?.profile_picture}`}
                       alt={user.name}
                       className="w-full h-full object-cover"
                     />

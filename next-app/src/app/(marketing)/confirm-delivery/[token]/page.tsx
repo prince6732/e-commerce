@@ -235,7 +235,7 @@ const ConfirmDeliveryPage = () => {
                                     <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                                         {item.product.image_url && (
                                             <img
-                                                src={`${process.env.NEXT_PUBLIC_UPLOAD_BASE || 'http://localhost:8000'}${item.product.image_url}`}
+                                                src={`${process.env.NEXT_PUBLIC_UPLOAD_BASE || 'https://api.zelton.co.in'}${item.product.image_url}`}
                                                 alt={item.product.name}
                                                 className="w-full h-full object-cover"
                                             />
