@@ -237,7 +237,7 @@ function CheckoutPageContent() {
                         const { payment_session_id } = response.data;
                         
                         const cashfree = new (window as any).Cashfree({
-                            mode: "sandbox"
+                            mode: "production"
                         });
 
                         cashfree.checkout({

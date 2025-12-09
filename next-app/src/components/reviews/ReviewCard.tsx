@@ -51,28 +51,31 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="bg-white py-5 px-4 hover:bg-gray-50 transition-colors">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start gap-3">
           <UserAvatar 
             name={review.user_name}
             profilePicture={review.user?.profile_picture}
-            size="md"
+            size="sm"
           />
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="font-semibold text-gray-900">{review.user_name}</h4>
+              <h4 className="font-medium text-gray-900 text-sm">{review.user_name}</h4>
               {review.is_verified && (
-                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                <span className="flex items-center gap-1 text-green-600 text-xs">
                   <CheckCircle className="w-3 h-3" />
-                  Verified Purchase
-                </div>
+                  Verified
+                </span>
               )}
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <StarRating rating={review.rating} size="sm" />
-              <span className="text-sm text-gray-500">{formatDate(review.created_at)}</span>
+              <div className="flex items-center gap-1 bg-green-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
+                <span>{review.rating}</span>
+                <span>★</span>
+              </div>
+              <span className="text-xs text-gray-500">• {formatDate(review.created_at)}</span>
             </div>
           </div>
         </div>
@@ -82,23 +85,23 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
             >
-              <MoreVertical className="w-4 h-4 text-gray-500" />
+              <MoreVertical className="w-4 h-4 text-gray-400" />
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-10">
+              <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                 {onEdit && (
                   <button
                     onClick={() => {
                       onEdit(review);
                       setShowMenu(false);
                     }}
-                    className="flex items-center gap-2 w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-1.5 w-full px-3 py-1.5 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <Edit className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium">Edit Review</span>
+                    <Edit className="w-3.5 h-3.5 text-gray-600" />
+                    <span className="text-xs">Edit</span>
                   </button>
                 )}
                 {onDelete && (
@@ -107,10 +110,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                       onDelete(review.id);
                       setShowMenu(false);
                     }}
-                    className="flex items-center gap-2 w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors text-red-600"
+                    className="flex items-center gap-1.5 w-full px-3 py-1.5 text-left hover:bg-red-50 transition-colors text-red-600"
                   >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="text-sm font-medium">Delete Review</span>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="text-xs">Delete</span>
                   </button>
                 )}
               </div>
@@ -121,42 +124,38 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
       {/* Review Title */}
       {review.title && (
-        <h5 className="font-semibold text-gray-900 mb-2">{review.title}</h5>
+        <h5 className="font-medium text-gray-900 mb-2 text-sm">{review.title}</h5>
       )}
 
       {/* Review Text */}
       {review.review_text && (
-        <p className="text-gray-700 leading-relaxed mb-4">{review.review_text}</p>
+        <p className="text-gray-700 text-sm leading-relaxed mb-3">{review.review_text}</p>
       )}
 
       {/* Footer Actions */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className="text-sm text-gray-500">
-          {review.time_ago}
-        </div>
-
+      <div className="flex items-center gap-3 pt-3">
         {/* Helpful Button */}
         {!isOwnReview && onToggleHelpful && (
           <button
             onClick={handleToggleHelpful}
             disabled={helpfulLoading}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${isHelpful
-                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-all ${isHelpful
+                ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                : 'text-gray-600 hover:bg-gray-100'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {helpfulLoading ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
             ) : (
-              <ThumbsUp className={`w-4 h-4 ${isHelpful ? 'fill-current' : ''}`} />
+              <ThumbsUp className={`w-3.5 h-3.5 ${isHelpful ? 'fill-current' : ''}`} />
             )}
             <span>Helpful {helpfulCount > 0 && `(${helpfulCount})`}</span>
           </button>
         )}
 
         {isOwnReview && (
-          <div className="flex items-center gap-1 px-3 py-2 bg-green-100 text-green-700 rounded-xl text-sm font-medium">
-            <Shield className="w-4 h-4" />
+          <div className="flex items-center gap-1 text-gray-600 text-xs">
+            <Shield className="w-3.5 h-3.5" />
             Your Review
           </div>
         )}

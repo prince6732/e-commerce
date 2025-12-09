@@ -237,11 +237,14 @@ export default function CategoriesManagement() {
                   const secondary_image = category.secondary_image
                     ? `${basePath}${category.secondary_image.replace(/\\/g, "/")}`
                     : null;
+                  const plainDescription = category?.description
+                    ? category.description.replace(/<[^>]+>/g, "").slice(0, 80)
+                    : "No Description";
                   return (
                     <tr key={category.id} className="bg-white/5 hover:bg-white/10 transition">
                       <td className="px-6 py-4">{index + 1}</td>
                       <td className="px-6 py-4">{category.name}</td>
-                      <td className="px-6 py-4" dangerouslySetInnerHTML={{ __html: category?.description || "<p>No Description</p>" }} ></td>
+                      <td className="px-6 py-4 max-w-10">{plainDescription}</td>
 
                       <td className="px-6 py-4">
                         {image ? (
@@ -505,7 +508,7 @@ export default function CategoriesManagement() {
           onClose={() => setIsDeleteModalOpen(false)}
           title="Confirm Delete"
         >
-          <p>Are you sure you want to delete {categoryToDelete?.name}?</p>
+          <p className="text-gray-900">Are you sure you want to delete {categoryToDelete?.name}?</p>
           <div className="mt-4 flex justify-end space-x-4">
             <button
               onClick={() => setIsDeleteModalOpen(false)}

@@ -145,6 +145,7 @@ const Navbar = () => {
     } else {
       router.push('/login');
     }
+    setAccountMenuOpen(false)
   };
 
   // Search functionality
@@ -373,31 +374,55 @@ const Navbar = () => {
                     color: themes?.text_color || "#000",
                     borderColor: themes?.primary_color || "#e5e7eb",
                   }}
-                  className="absolute left-0 top-full mt-2 w-80 shadow-2xl rounded-2xl border overflow-hidden animate-in slide-in-from-top-2 duration-200"
+                  className="absolute left-[-300px] top-full mt-2 w-[900px] shadow-2xl rounded-2xl border overflow-hidden animate-in slide-in-from-top-2 duration-200"
                 >
                   <div className="p-4">
                     <div className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Shop by Category</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {categories.length > 0 ? (
-                        categories.map((cat) => (
-                          <Link
-                            key={cat.id}
-                            href={`/categories/subcategories/${cat.id}`}
-                            className="group flex items-center gap-3 p-3 rounded-xl  hover:shadow-md transition-all duration-300"
-                          >
-                            {/* <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                              {cat.name?.charAt(0).toUpperCase() || 'C'}
-                            </div> */}
+                    <div className="grid grid-cols-4 gap-3">
 
-                            <div style={{
-                              color: themes?.text_color || "#000", // fallback to black
-                            }} className="font-medium  transition-colors">
-                              {cat.name}
-                            </div>
-                          </Link>
-                        ))
+                      {categories.length > 0 ? (
+
+                        categories.map((cat) => {
+                          const image = cat.image
+                            ? `${basePath}${cat.image.replace(/\\/g, "/")}`
+                            : null;
+                          const plainDescription = cat?.description
+                            ? cat.description.replace(/<[^>]+>/g, "").slice(0, 80) 
+                            : "No Description";
+
+                          return (
+                            <Link
+                              key={cat.id}
+                              href={`/categories/subcategories/${cat.id}`}
+                              className="group flex items-center gap-3 p-3 rounded-xl hover:shadow-md transition-all duration-300"
+                            >
+                              {image ? (
+                                <Image
+                                  src={image}
+                                  alt={cat.name}
+                                  width={60}
+                                  height={60}
+                                  className="object-cover rounded"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center text-white font-bold text-base">
+                                  {cat.name?.charAt(0).toUpperCase() || "C"}
+                                </div>
+                              )}
+
+                              <div
+                                style={{ color: themes?.text_color || "#000" }}
+                                className="font-medium transition-colors"
+                              >
+                                {cat.name}
+                                <p className="text-sm text-gray-500 line-clamp-2">{plainDescription}</p>
+                              </div>
+                            </Link>
+                          );
+                        })
                       ) : (
-                        <div className="col-span-2 text-center py-8">
+                        <div className="col-span-4 text-center py-8">
                           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <RiSearchLine className="text-2xl text-gray-400" />
                           </div>
@@ -405,6 +430,7 @@ const Navbar = () => {
                         </div>
                       )}
                     </div>
+
                   </div>
                   {categories.length > 0 && (
                     <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 border-t border-gray-100">
@@ -469,7 +495,7 @@ const Navbar = () => {
                 }} />
               </button>
               {isSearchOpen && (
-                <div className="absolute right-0 top-full mt-3 w-96 bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-top-2 duration-200 z-50">
+                <div className="absolute md:right-0 -right-[150px] top-full mt-3 w-96 bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-top-2 duration-200 z-50">
                   <div className="p-6">
                     <form onSubmit={handleSearchSubmit}>
                       <div className="relative">
@@ -697,6 +723,7 @@ const Navbar = () => {
                         )}
                         <Link
                           href="/profile"
+                          onClick={() => setAccountMenuOpen(false)}
                           className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors rounded-xl"
                         >
                           <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -705,7 +732,9 @@ const Navbar = () => {
                           <span className="font-medium">My Profile</span>
                         </Link>
                         <Link
+
                           href="/orders"
+                          onClick={() => setAccountMenuOpen(false)}
                           className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors rounded-xl"
                         >
                           <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -924,7 +953,7 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  href="/About_us"
+                  href="/about_us"
                   className="flex items-center gap-3 py-3 px-4 text-gray-900 font-medium hover:bg-orange-50 hover:text-orange-600 rounded-xl transition-all"
                   onClick={() => setMobileMenuOpen(false)}
                 >

@@ -25,6 +25,10 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
         name: `variants.${itemIndex}.options`,
     });
 
+    const disableScrollNumberInput = (e: React.WheelEvent<HTMLInputElement>) => {
+        e.currentTarget.blur(); // remove focus so scroll cannot change value
+    };
+
     return (
         <div className="flex flex-col gap-6">
             <div className="grid grid-cols-1 gap-6">
@@ -119,6 +123,7 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.mrp`)}
                                         type="number"
+                                        onWheel={disableScrollNumberInput}
                                         placeholder="MRP"
                                         className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                                     />
@@ -134,6 +139,7 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.bp`)}
                                         type="number"
+                                        onWheel={disableScrollNumberInput}
                                         placeholder="BP"
                                         className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                                     />
@@ -149,6 +155,7 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.sp`)}
                                         type="number"
+                                        onWheel={disableScrollNumberInput}
                                         placeholder="SP"
                                         className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                                     />
@@ -163,6 +170,7 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.stock` as const)}
                                         type="number"
+                                        onWheel={disableScrollNumberInput}
                                         step="0.01"
                                         placeholder="Enter Stock"
                                         className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"

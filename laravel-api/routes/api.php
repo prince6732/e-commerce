@@ -21,6 +21,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ThemesController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\UserController;
 
 // ==========================================
 // PUBLIC ROUTES (No Authentication Required)
@@ -41,6 +42,7 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/get-product/{product}', [ProductController::class, 'getProductById']);
 Route::get('/search-products', [ProductController::class, 'search']);
 Route::get('/get-products-by-category/{categoryId}', [ProductController::class, 'getSubcategoryProduct']);
+Route::get('/get-similar-products/{productId}', [ProductController::class, 'getSimilarProducts']);
 
 // Public category routes (for navigation)
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -89,16 +91,29 @@ Route::get('/themes', [ThemesController::class, 'index']);
 Route::get('/confirm-delivery/{token}', [OrderController::class, 'getOrderByToken']);
 Route::post('/confirm-delivery/{token}', [OrderController::class, 'confirmDelivery']);
 
+// Test Cashfree credentials (for debugging - remove in production)
+Route::get('/test-cashfree', [PaymentController::class, 'testCredentials']);
+
 // ==========================================
 // PROTECTED ROUTES (Authentication Required)
 // ==========================================
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'check.user.status'])->group(function () {
 
     // ========== USER MANAGEMENT ==========
     Route::get('/user', [AuthController::class, 'me']);
     Route::get('/all_users', [AuthController::class, 'allUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // ========== ADMIN: USER MANAGEMENT ==========
+    Route::middleware('role:Admin')->group(function () {
+        Route::get('/admin/users', [UserController::class, 'index']);
+        Route::get('/admin/users/statistics', [UserController::class, 'getStatistics']);
+        Route::get('/admin/users/{id}', [UserController::class, 'show']);
+        Route::post('/admin/users/{id}/block', [UserController::class, 'blockUser']);
+        Route::post('/admin/users/{id}/unblock', [UserController::class, 'unblockUser']);
+        Route::post('/admin/users/{id}/toggle-status', [UserController::class, 'toggleStatus']);
+    });
 
     // ========== USER PROFILE ==========
     Route::get('/profile', [ProfileController::class, 'show']);

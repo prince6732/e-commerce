@@ -487,6 +487,70 @@ class ProductController extends Controller
         }
     }
 
+    public function getSimilarProducts(Request $request, $productId)
+    {
+        try {
+            $product = Product::findOrFail($productId);
+            $page = $request->input('page', 1);
+            $perPage = $request->input('per_page', 10);
+            
+            // Get similar products based on category and subcategory
+            $query = Product::with(['category', 'brand', 'variants'])
+                ->where('id', '!=', $productId)
+                ->where('category_id', $product->category_id)
+                ->active();
+
+            $totalCount = $query->count();
+
+            // If no products found in same category, get from parent category
+            if ($totalCount === 0 && $product->category && $product->category->parent_id) {
+                $query = Product::with(['category', 'brand', 'variants'])
+                    ->where('id', '!=', $productId)
+                    ->whereHas('category', function ($q) use ($product) {
+                        $q->where('parent_id', $product->category->parent_id);
+                    })
+                    ->active();
+                    
+                $totalCount = $query->count();
+            }
+
+            $similarProducts = $query
+                ->skip(($page - 1) * $perPage)
+                ->take($perPage)
+                ->get();
+
+            $similarProducts->transform(function ($prod) {
+                if (empty($prod->image_url) && $prod->variants->isNotEmpty()) {
+                    $firstVariantWithImage = $prod->variants->firstWhere('image_url', '!=', null);
+                    if ($firstVariantWithImage) {
+                        $prod->image_url = $firstVariantWithImage->image_url;
+                    }
+                }
+                $prod->append('rating_summary');
+                return $prod;
+            });
+
+            return response()->json([
+                'res'         => 'success',
+                'message'     => 'Similar products fetched successfully.',
+                'products'    => $similarProducts,
+                'pagination'  => [
+                    'current_page' => (int) $page,
+                    'per_page'     => (int) $perPage,
+                    'total'        => $totalCount,
+                    'last_page'    => ceil($totalCount / $perPage),
+                    'has_more'     => $page < ceil($totalCount / $perPage),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'res'     => 'error',
+                'message' => 'Failed to fetch similar products.',
+                'errors'  => [$e->getMessage()],
+            ], 500);
+        }
+    }
+
     public function search(Request $request)
     {
         try {

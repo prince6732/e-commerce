@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, Plus, Filter } from 'lucide-react';
+import { ChevronDown, Plus, Filter, Shield } from 'lucide-react';
 import StarRating from '../ui/StarRating';
 import ReviewCard from './ReviewCard';
 import ReviewForm from './ReviewForm';
-import RatingSummary from './RatingSummary';
+// import RatingSummary from './RatingSummary';
 import Modal from '../(sheared)/Modal';
 import {
     Review,
@@ -47,6 +47,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
     // Filters and Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
     const [sortBy, setSortBy] = useState<SortOption>('newest');
     const [ratingFilter, setRatingFilter] = useState<number | null>(null);
 
@@ -64,7 +65,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
         try {
             const response = await getProductReviews(productId, {
                 page,
-                per_page: 10,
+                per_page: 8,
                 sort_by: sortBy,
                 ...(ratingFilter && { rating: ratingFilter })
             });
@@ -78,6 +79,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
             setSummary(response.summary);
             setCurrentPage(response.reviews.current_page);
             setTotalPages(response.reviews.last_page);
+            setHasMore(response.reviews.current_page < response.reviews.last_page);
         } catch (error) {
             console.error('Error fetching reviews:', error);
         } finally {
@@ -105,6 +107,18 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
     useEffect(() => {
         fetchUserReview();
     }, [productId, user]);
+
+    // Listen for openReviewModal event
+    useEffect(() => {
+        const handleOpenReviewModal = () => {
+            setShowReviewForm(true);
+        };
+
+        window.addEventListener('openReviewModal', handleOpenReviewModal);
+        return () => {
+            window.removeEventListener('openReviewModal', handleOpenReviewModal);
+        };
+    }, []);
 
     // Handlers
     const handleCreateReview = async (data: CreateReviewData) => {
@@ -194,187 +208,177 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onRatingUpda
     };
 
     return (
-        <div className="space-y-8">
-            {/* Reviews Header */}
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Reviews & Ratings</h2>
+        <>
+            {summary.total_reviews > 0 && (
+                <div className="space-y-6">
+                    {/* Reviews Header */}
+                    <div className="flex items-center justify-between border-b pb-4">
+                        <h2 className="text-xl font-semibold text-gray-900">Customer Reviews & Ratings</h2>
+                    </div>
 
-                {user && !userReview && !showReviewForm && (
-                    <button
-                        onClick={() => setShowReviewForm(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Write a Review
-                    </button>
-                )}
-            </div>
-
-            {/* Rating Summary and Review Form */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1">
+                    {/* Rating Summary and User Review Display */}
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* <div className="lg:col-span-1">
                     <RatingSummary
                         summary={summary}
                         onRatingFilter={setRatingFilter}
                         selectedRating={ratingFilter}
                     />
-                </div>
+                </div> */}
 
-                <div className="lg:col-span-2">
+                    </div>
+
+                    {/* Review Form Modal */}
                     {showReviewForm && (
-                        <ReviewForm
-                            productId={productId}
-                            initialData={editingReview ? {
-                                rating: editingReview.rating,
-                                title: editingReview.title || '',
-                                review_text: editingReview.review_text || ''
-                            } : undefined}
-                            isEditing={!!editingReview}
-                            onSubmit={handleFormSubmit}
-                            onCancel={handleCancelForm}
-                            loading={loading}
-                        />
-                    )}
-
-                    {/* User's Review Display */}
-                    {userReview && !showReviewForm && (
-                        <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-3">Your Review</h3>
-                            <ReviewCard
-                                review={userReview}
-                                currentUserId={user?.id}
-                                onEdit={handleEditReview}
-                                onDelete={handleDeleteReview}
-                            />
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Reviews Section */}
-            {summary.total_reviews > 0 && (
-                <>
-                    {/* Filters and Sort */}
-                    <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl">
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm font-medium text-gray-700">
-                                {summary.total_reviews} review{summary.total_reviews !== 1 ? 's' : ''}
-                                {ratingFilter && ` • ${ratingFilter} stars`}
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                className="px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                {sortOptions.map(option => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Reviews List */}
-                    <div className="space-y-6">
-                        {reviews.map((review) => (
-                            <ReviewCard
-                                key={review.id}
-                                review={review}
-                                currentUserId={user?.id}
-                                onEdit={review.user_id === user?.id ? handleEditReview : undefined}
-                                onDelete={review.user_id === user?.id ? handleDeleteReview : undefined}
-                                onToggleHelpful={review.user_id !== user?.id ? handleToggleHelpful : undefined}
-                            />
-                        ))}
-                    </div>
-
-                    {/* Load More Button */}
-                    {currentPage < totalPages && (
-                        <div className="text-center">
-                            <button
-                                onClick={handleLoadMore}
-                                disabled={loading}
-                                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {loading ? 'Loading...' : 'Load More Reviews'}
-                            </button>
-                        </div>
-                    )}
-                </>
-            )}
-
-            {/* Empty State */}
-            {summary.total_reviews === 0 && !loading && (
-                <div className="text-center py-12 bg-gray-50 rounded-2xl">
-                    <div className="text-gray-400 mb-4">
-                        <StarRating rating={0} size="lg" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No reviews yet</h3>
-                    <p className="text-gray-600 mb-4">Be the first to review this product</p>
-                    {user && (
-                        <button
-                            onClick={() => setShowReviewForm(true)}
-                            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors"
+                        <Modal
+                            isOpen={showReviewForm}
+                            onClose={handleCancelForm}
+                            title={editingReview ? "Edit Your Review" : "Write a Review"}
                         >
-                            Write the First Review
-                        </button>
+                            <ReviewForm
+                                productId={productId}
+                                initialData={editingReview ? {
+                                    rating: editingReview.rating,
+                                    title: editingReview.title || '',
+                                    review_text: editingReview.review_text || ''
+                                } : undefined}
+                                isEditing={!!editingReview}
+                                onSubmit={handleFormSubmit}
+                                onCancel={handleCancelForm}
+                                loading={loading}
+                            />
+                        </Modal>
                     )}
-                </div>
-            )}
 
-            {/* Delete Confirmation Modal */}
-            <Modal
-                isOpen={showDeleteModal}
-                onClose={cancelDeleteReview}
-                title="Delete Review"
-                width="max-w-md"
-            >
-                <div className="space-y-4">
-                    <p className="text-gray-700">
-                        Are you sure you want to delete this review? This action cannot be undone.
-                    </p>
+                    {/* Reviews Section */}
+                    {summary.total_reviews > 0 && (
+                        <>
+                            {/* Filters and Sort */}
+                            <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl">
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm font-medium text-gray-700">
+                                        {summary.total_reviews} review{summary.total_reviews !== 1 ? 's' : ''}
+                                        {ratingFilter && ` • ${ratingFilter} stars`}
+                                    </span>
+                                </div>
 
-                    {reviewToDelete && (
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                            <div className="flex items-center gap-2 mb-1">
-                                <StarRating rating={reviewToDelete.rating} size="sm" />
-                                <span className="text-sm text-gray-600">
-                                    {reviewToDelete.rating} out of 5 stars
-                                </span>
+                                <div className="flex items-center gap-3">
+                                    <select
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                        className="px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        {sortOptions.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
-                            {reviewToDelete.title && (
-                                <p className="font-medium text-sm text-gray-900">{reviewToDelete.title}</p>
+
+                            {/* Reviews List */}
+                            <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
+                                {reviews.map((review) => (
+                                    <ReviewCard
+                                        key={review.id}
+                                        review={review}
+                                        currentUserId={user?.id}
+                                        onEdit={review.user_id === user?.id ? handleEditReview : undefined}
+                                        onDelete={review.user_id === user?.id ? handleDeleteReview : undefined}
+                                        onToggleHelpful={review.user_id !== user?.id ? handleToggleHelpful : undefined}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Load More Reviews Button */}
+                            {hasMore && (
+                                <div className="text-center">
+                                    <button
+                                        onClick={handleLoadMore}
+                                        disabled={loading}
+                                        className="px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                    >
+                                        {loading ? 'Loading...' : 'Load More Reviews'}
+                                    </button>
+                                </div>
                             )}
-                            {reviewToDelete.review_text && (
-                                <p className="text-sm text-gray-700 mt-1 line-clamp-2">
-                                    {reviewToDelete.review_text}
-                                </p>
-                            )}
-                        </div>
+                        </>
                     )}
 
-                    <div className="flex justify-end gap-3 pt-2">
-                        <button
-                            onClick={cancelDeleteReview}
-                            className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={confirmDeleteReview}
-                            disabled={loading}
-                            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors"
-                        >
-                            {loading ? 'Deleting...' : 'Delete Review'}
-                        </button>
-                    </div>
+                    {/* Empty State */}
+                    {summary.total_reviews === 0 && !loading && (
+                        <div className="text-center py-12 bg-gray-50 rounded-2xl">
+                            <div className="mb-4 flex justify-center">
+                                <StarRating rating={0} size="lg" />
+                            </div>
+
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">No reviews yet</h3>
+                            <p className="text-gray-600 mb-4">Be the first to review this product</p>
+
+                            {user && (
+                                <button
+                                    onClick={() => setShowReviewForm(true)}
+                                    className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors"
+                                >
+                                    Write the First Review
+                                </button>
+                            )}
+                        </div>
+
+                    )}
+
+                    {/* Delete Confirmation Modal */}
+                    <Modal
+                        isOpen={showDeleteModal}
+                        onClose={cancelDeleteReview}
+                        title="Delete Review"
+                        width="max-w-md"
+                    >
+                        <div className="space-y-4">
+                            <p className="text-gray-700">
+                                Are you sure you want to delete this review? This action cannot be undone.
+                            </p>
+
+                            {reviewToDelete && (
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <StarRating rating={reviewToDelete.rating} size="sm" />
+                                        <span className="text-sm text-gray-600">
+                                            {reviewToDelete.rating} out of 5 stars
+                                        </span>
+                                    </div>
+                                    {reviewToDelete.title && (
+                                        <p className="font-medium text-sm text-gray-900">{reviewToDelete.title}</p>
+                                    )}
+                                    {reviewToDelete.review_text && (
+                                        <p className="text-sm text-gray-700 mt-1 line-clamp-2">
+                                            {reviewToDelete.review_text}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button
+                                    onClick={cancelDeleteReview}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDeleteReview}
+                                    disabled={loading}
+                                    className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors"
+                                >
+                                    {loading ? 'Deleting...' : 'Delete Review'}
+                                </button>
+                            </div>
+                        </div>
+                    </Modal>
                 </div>
-            </Modal>
-        </div>
+            )}
+        </>
     );
 };
 

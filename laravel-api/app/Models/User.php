@@ -58,4 +58,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    // Check if user is blocked
+    public function isBlocked()
+    {
+        return $this->status === false;
+    }
+
+    // Scope for active users only
+    public function scopeActive($query)
+    {
+        return $query->where('status', true);
+    }
 }
+

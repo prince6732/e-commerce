@@ -42,7 +42,7 @@ const schema = yup.object({
     description: yup.string(),
     itemCode: yup.string().nullable(),
     categoryId: yup.string().required("Category is required"),
-    brandId: yup.string().nullable(),
+    brandId: yup.string().required("Brand is required"),
     status: yup.boolean().default(true),
     image_url: yup.string().required("Primary image is required"),
     detailJson: yup.array(
@@ -206,6 +206,10 @@ function ProductForm() {
         }
     }, [showToast]);
 
+    const disableScrollNumberInput = (e: React.WheelEvent<HTMLInputElement>) => {
+        e.currentTarget.blur();
+    };
+
     return (
         <div className="mt-8 w-full max-w-4xl mx-auto sm:p-4 md:p-8 p-2 bg-white/90 border border-gray-200 rounded-2xl shadow-lg relative">
             <h2 className="text-2xl font-bold text-black mb-6">Add Product</h2>
@@ -248,6 +252,7 @@ function ProductForm() {
                         <input
                             {...register("mrp")}
                             type="number"
+                            onWheel={disableScrollNumberInput}
                             step="0.01"
                             placeholder="Enter MRP"
                             className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
@@ -260,6 +265,7 @@ function ProductForm() {
                         <input
                             {...register("bp")}
                             type="number"
+                            onWheel={disableScrollNumberInput}
                             step="0.01"
                             placeholder="Enter Base Price"
                             className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
@@ -273,6 +279,7 @@ function ProductForm() {
                             {...register("sp")}
                             type="number"
                             step="0.01"
+                            onWheel={disableScrollNumberInput}
                             placeholder="Enter Selling Price"
                             className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                         />
@@ -285,6 +292,7 @@ function ProductForm() {
                             {...register("stock")}
                             type="number"
                             step="0.01"
+                            onWheel={disableScrollNumberInput}
                             placeholder="Enter Stock"
                             className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                         />
@@ -299,6 +307,7 @@ function ProductForm() {
                             placeholder="Enter item code"
                             className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                         />
+                        <p className="text-sm text-red-500">{errors.itemCode?.message as any}</p>
                     </div>
                     {/* Brand */}
                     <div>
@@ -314,6 +323,7 @@ function ProductForm() {
                                 </option>
                             ))}
                         </select>
+                        <p className="text-sm text-red-500">{errors.brandId?.message as any}</p>
                     </div>
                     {/* Description */}
                     <div className="w-full sm:col-span-2">

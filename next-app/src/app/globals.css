@@ -11,8 +11,9 @@ html {
   --color-gc-900: #1c1c1c;
 }
 
-a, button{
-  cursor: pointer ;
+a,
+button {
+  cursor: pointer;
 }
 @layer utilities {
   .scrollHide::-webkit-scrollbar {
@@ -32,9 +33,7 @@ a, button{
   }
 
   .scrollbar::-webkit-scrollbar-thumb {
-
-    @apply bg-gc-900/60 rounded-2xl border-2 border-gc-300/30 cursor-pointer
-
+    @apply bg-gc-900/60 rounded-2xl border-2 border-gc-300/30 cursor-pointer;
   }
 }
 .container {

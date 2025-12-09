@@ -431,7 +431,7 @@ export default function AttributeValuesManagement() {
 
                 {/* Delete Modal */}
                 <Modal width="max-w-xl" isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Confirm Delete">
-                    <p>Are you sure you want to delete {selectedValue?.value}?</p>
+                    <p className="text-gray-700">Are you sure you want to delete {selectedValue?.value}?</p>
                     <div className="mt-4 flex justify-end space-x-4">
                         <button onClick={() => setIsDeleteModalOpen(false)} className="rounded bg-gray-500 px-4 py-2 text-white">
                             Cancel

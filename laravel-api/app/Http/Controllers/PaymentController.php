@@ -24,8 +24,8 @@ class PaymentController extends Controller
     {
         $this->appId = env('CASHFREE_APP_ID');
         $this->secretKey = env('CASHFREE_SECRET_KEY');
-        $this->apiVersion = env('CASHFREE_API_VERSION', '2022-09-01');
-        $this->baseUrl = env('CASHFREE_BASE_URL', 'https://sandbox.cashfree.com/pg');
+        $this->apiVersion = env('CASHFREE_API_VERSION', '2023-08-01');
+        $this->baseUrl = env('CASHFREE_BASE_URL', 'https://api.cashfree.com/pg');
     }
 
     public function initiatePayment(Request $request)
@@ -152,6 +152,30 @@ class PaymentController extends Controller
             $order->addTracking('pending', 'Order initiated, waiting for payment', 'Online Store');
 
             // Call Cashfree API
+            Log::info('Cashfree Payment Request', [
+                'app_id' => $this->appId,
+                'base_url' => $this->baseUrl,
+                'api_version' => $this->apiVersion,
+            ]);
+
+            // Determine return URL based on environment
+            $origin = $request->header('Origin') ?? env('FRONTEND_URL', 'http://localhost:3000');
+            
+            // For production API, ensure HTTPS. For sandbox, HTTP is allowed.
+            if (str_contains($this->baseUrl, 'sandbox')) {
+                // Sandbox mode - HTTP allowed
+                $returnUrl = $origin . "/checkout?order_id={order_id}";
+            } else {
+                // Production mode - force HTTPS or use a placeholder
+                if (str_starts_with($origin, 'http://localhost') || str_starts_with($origin, 'http://127.0.0.1')) {
+                    // Development environment with production keys - use placeholder
+                    $returnUrl = "https://yourdomain.com/checkout?order_id={order_id}";
+                    Log::warning('Using placeholder HTTPS URL for development with production Cashfree keys');
+                } else {
+                    $returnUrl = str_replace('http://', 'https://', $origin) . "/checkout?order_id={order_id}";
+                }
+            }
+
             $response = Http::withoutVerifying()->withHeaders([
                 'x-client-id' => $this->appId,
                 'x-client-secret' => $this->secretKey,
@@ -159,18 +183,21 @@ class PaymentController extends Controller
                 'Content-Type' => 'application/json',
             ])->post($this->baseUrl . '/orders', [
                 'order_id' => $orderNumber,
-                'order_amount' => $total,
+                'order_amount' => (float)$total,
                 'order_currency' => 'INR',
                 'customer_details' => [
                     'customer_id' => (string)$userId,
                     'customer_email' => $user->email,
-                    'customer_phone' => $user->phone ?? '9999999999', // Fallback if phone is missing
+                    'customer_phone' => $user->phone_number ?? '9999999999', // Fallback if phone is missing
                     'customer_name' => $user->name,
                 ],
                 'order_meta' => [
-                    'return_url' => $request->header('Origin') . "/checkout?order_id={order_id}",
+                    'return_url' => $returnUrl,
                 ]
             ]);
+
+            Log::info('Cashfree Response Status: ' . $response->status());
+            Log::info('Cashfree Response Body: ' . $response->body());
 
             if ($response->successful()) {
                 $paymentData = $response->json();
@@ -259,6 +286,26 @@ class PaymentController extends Controller
                 'success' => false,
                 'message' => 'Error verifying payment',
                 'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Test Cashfree credentials
+     */
+    public function testCredentials()
+    {
+        try {
+            return response()->json([
+                'app_id' => $this->appId,
+                'secret_key_preview' => substr($this->secretKey, 0, 10) . '...',
+                'api_version' => $this->apiVersion,
+                'base_url' => $this->baseUrl,
+                'credentials_loaded' => !empty($this->appId) && !empty($this->secretKey),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
             ], 500);
         }
     }

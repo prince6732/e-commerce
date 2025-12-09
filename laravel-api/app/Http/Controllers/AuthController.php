@@ -131,7 +131,9 @@ class AuthController extends Controller
 
         if (!$user->status) {
             return response()->json([
-                'message' => 'Your account is inactive. Please contact admin.'
+                'res' => 'error',
+                'message' => 'Your account has been blocked by the administrator. Please contact support for assistance.',
+                'error' => 'account_blocked'
             ], 403);
         }
 
@@ -321,7 +323,9 @@ class AuthController extends Controller
 
             if (!$user->status) {
                 return response()->json([
-                    'message' => 'Your account is inactive. Please contact admin.'
+                    'res' => 'error',
+                    'message' => 'Your account has been blocked by the administrator. Please contact support for assistance.',
+                    'error' => 'account_blocked'
                 ], 403);
             }
 

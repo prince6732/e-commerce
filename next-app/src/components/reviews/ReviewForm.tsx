@@ -78,45 +78,33 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     };
 
     return (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900">
-                    {isEditing ? 'Edit Your Review' : 'Write a Review'}
-                </h3>
-                <button
-                    onClick={onCancel}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                    <X className="w-5 h-5 text-gray-500" />
-                </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg p-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Rating Section */}
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Rating *
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Rating <span className="text-red-500">*</span>
                     </label>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         <StarRating
                             rating={formData.rating}
                             interactive={true}
                             onRatingChange={handleRatingChange}
-                            size="lg"
+                            size="md"
                         />
-                        <span className="text-sm text-gray-600">
+                        <span className="text-xs text-gray-600">
                             {formData.rating > 0 && `${formData.rating} star${formData.rating !== 1 ? 's' : ''}`}
                         </span>
                     </div>
                     {errors.rating && (
-                        <p className="mt-1 text-sm text-red-600">{errors.rating}</p>
+                        <p className="mt-1 text-xs text-red-600">{errors.rating}</p>
                     )}
                 </div>
 
                 {/* Title Section */}
                 <div>
-                    <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-1">
-                        Review Title *
+                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Review Title <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
@@ -126,18 +114,18 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                             setFormData(prev => ({ ...prev, title: e.target.value }));
                             if (errors.title) setErrors(prev => ({ ...prev, title: '' }));
                         }}
-                        placeholder="Sum up your review in a few words"
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.title ? 'border-red-300' : 'border-gray-300'
+                        placeholder="Sum up your review"
+                        className={`w-full px-3 text-black py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.title ? 'border-red-300' : 'border-gray-300'
                             }`}
                         maxLength={100}
                     />
                     <div className="flex justify-between mt-1">
                         {errors.title ? (
-                            <p className="text-sm text-red-600">{errors.title}</p>
+                            <p className="text-xs text-red-600">{errors.title}</p>
                         ) : (
                             <div></div>
                         )}
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-400">
                             {formData.title.length}/100
                         </span>
                     </div>
@@ -145,8 +133,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
                 {/* Review Text Section */}
                 <div>
-                    <label htmlFor="review_text" className="block text-sm font-semibold text-gray-700 mb-1">
-                        Your Review *
+                    <label htmlFor="review_text" className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Your Review <span className="text-red-500">*</span>
                     </label>
                     <textarea
                         id="review_text"
@@ -156,29 +144,29 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                             if (errors.review_text) setErrors(prev => ({ ...prev, review_text: '' }));
                         }}
                         placeholder="Share your thoughts about this product..."
-                        rows={5}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical ${errors.review_text ? 'border-red-300' : 'border-gray-300'
+                        rows={4}
+                        className={`w-full text-black px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-vertical ${errors.review_text ? 'border-red-300' : 'border-gray-300'
                             }`}
                         maxLength={1000}
                     />
                     <div className="flex justify-between mt-1">
                         {errors.review_text ? (
-                            <p className="text-sm text-red-600">{errors.review_text}</p>
+                            <p className="text-xs text-red-600">{errors.review_text}</p>
                         ) : (
                             <div></div>
                         )}
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-400">
                             {formData.review_text.length}/1000
                         </span>
                     </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-2 pt-2">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all"
+                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg font-medium hover:bg-gray-50 transition-colors"
                         disabled={loading}
                     >
                         Cancel
@@ -186,14 +174,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                     <button
                         type="submit"
                         disabled={loading || formData.rating === 0}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5"
                     >
                         {loading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
-                                <Send className="w-5 h-5" />
-                                {isEditing ? 'Update Review' : 'Submit Review'}
+                                <Send className="w-4 h-4" />
+                                {isEditing ? 'Update' : 'Submit'}
                             </>
                         )}
                     </button>

@@ -271,6 +271,10 @@ function VariantProductForm() {
         }
     }, [showToast]);
 
+    const disableScrollNumberInput = (e: React.WheelEvent<HTMLInputElement>) => {
+        e.currentTarget.blur(); // remove focus so scroll cannot change value
+    };
+
     return (
         <div className="mt-8 w-full mx-auto sm:p-4 md:p-8 p-2 bg-white/90 border border-gray-200 rounded-2xl shadow-lg relative">
             {/* header */}
@@ -615,6 +619,7 @@ function VariantProductForm() {
                                                 <input
                                                     {...register(`variants.${variantIndex}.mrp` as const)}
                                                     type="number"
+                                                    onWheel={disableScrollNumberInput}  
                                                     placeholder="MRP"
                                                     className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                                                 />
@@ -630,6 +635,7 @@ function VariantProductForm() {
                                                 <input
                                                     {...register(`variants.${variantIndex}.bp` as const)}
                                                     type="number"
+                                                    onWheel={disableScrollNumberInput}  
                                                     placeholder="BP"
                                                     className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                                                 />
@@ -645,6 +651,7 @@ function VariantProductForm() {
                                                 <input
                                                     {...register(`variants.${variantIndex}.sp` as const)}
                                                     type="number"
+                                                    onWheel={disableScrollNumberInput}  
                                                     placeholder="SP"
                                                     className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                                                 />
@@ -658,6 +665,7 @@ function VariantProductForm() {
                                                 <input
                                                     {...register(`variants.${variantIndex}.stock` as const)}
                                                     type="number"
+                                                    onWheel={disableScrollNumberInput}
                                                     step="0.01"
                                                     placeholder="Enter Stock"
                                                     className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"

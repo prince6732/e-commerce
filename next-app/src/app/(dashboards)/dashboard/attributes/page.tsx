@@ -334,7 +334,7 @@ export default function AttributesManagement() {
                     onClose={() => setIsDeleteModalOpen(false)}
                     title="Confirm Delete"
                 >
-                    <p>Are you sure you want to delete {selectedAttribute?.name}?</p>
+                    <p className="text-gray-700">Are you sure you want to delete {selectedAttribute?.name}?</p>
                     <div className="mt-4 flex justify-end space-x-4">
                         <button
                             onClick={() => setIsDeleteModalOpen(false)}

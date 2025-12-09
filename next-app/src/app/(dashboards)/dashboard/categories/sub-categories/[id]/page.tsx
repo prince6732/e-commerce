@@ -677,7 +677,7 @@ export default function SubcategoriesManagement() {
           onClose={() => setIsDeleteModalOpen(false)}
           title="Confirm Delete"
         >
-          <p>Are you sure you want to delete {subcategoryToDelete?.name}?</p>
+          <p className="text-gray-900">Are you sure you want to delete {subcategoryToDelete?.name}?</p>
           <div className="mt-4 flex justify-end space-x-4">
             <button
               onClick={() => setIsDeleteModalOpen(false)}

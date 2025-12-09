@@ -183,7 +183,7 @@ const LikesPage = () => {
                         <span className="font-medium">Back</span>
                     </button>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">My Wishlist</h1>
+                        <h1 className="md:text-3xl text-xl font-bold text-gray-900">My Wishlist</h1>
                         <p className="text-gray-600">{likedProducts.length} {likedProducts.length === 1 ? 'item' : 'items'} in your wishlist</p>
                     </div>
                 </div>
