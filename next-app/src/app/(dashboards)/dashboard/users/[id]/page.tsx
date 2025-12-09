@@ -26,7 +26,7 @@ export default function UserDetailPage() {
     const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
     const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
 
-    const uploadUrl = `${process.env.NEXT_PUBLIC_UPLOAD_BASE}` || "http://localhost:8000";
+    const uploadUrl = `${process.env.NEXT_PUBLIC_UPLOAD_BASE}` || "https://api.zelton.co.in";
 
     useEffect(() => {
         if (userId) {
