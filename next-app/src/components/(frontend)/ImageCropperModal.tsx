@@ -38,7 +38,7 @@ export default function ImageCropperModal({
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [imageToDelete, setImageToDelete] = useState<string | null>(null);
 
-    const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+    const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
     const onCropComplete = useCallback((_croppedArea: Area, croppedPixels: Area) => {
         setCroppedArea(croppedPixels);

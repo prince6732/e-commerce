@@ -1,6 +1,6 @@
 import axios from './axios';
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.zelton.co.in/api";
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem('token');

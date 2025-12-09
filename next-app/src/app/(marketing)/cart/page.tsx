@@ -7,7 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, X } from "lucide-react";
 import imgPlaceholder from "@/public/imagePlaceholder.png";
-const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
 import { fetchThemes } from "../../../../utils/theme";
 

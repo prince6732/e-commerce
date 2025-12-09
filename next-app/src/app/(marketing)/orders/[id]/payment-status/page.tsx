@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import axios from "../../../../../../utils/axios";
 
-const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
 export default function PaymentStatusPage() {
     const router = useRouter();

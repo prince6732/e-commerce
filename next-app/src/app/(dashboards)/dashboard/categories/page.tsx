@@ -70,7 +70,7 @@ export default function CategoriesManagement() {
 
   const { showLoader, hideLoader } = useLoader();
   const router = useRouter();
-  const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+  const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
   const config = useMemo(
     () => ({

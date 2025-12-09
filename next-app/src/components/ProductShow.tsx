@@ -20,7 +20,7 @@ const ProductShowComponent: React.FC<ProductShowProps> = ({ subcategoryId }) => 
     const { showLoader, hideLoader } = useLoader();
 
     const baseUrl =
-        process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+        process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
     useEffect(() => {
         if (subcategoryId) {

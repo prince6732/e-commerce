@@ -1,5 +1,5 @@
 import axiosLib from "axios";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.zelton.co.in";
 
 const axios = axiosLib.create({
   baseURL: API_URL,

@@ -9,7 +9,7 @@ import imgPlaceholder from "@/public/imagePlaceholder.png";
 import { fetchThemes } from "../../../../../../utils/theme";
 import axios from "../../../../../../utils/axios";
 
-const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "http://localhost:8000";
+const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
 type Themes = {
     id: number;
