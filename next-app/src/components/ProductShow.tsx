@@ -22,6 +22,7 @@ const ProductShowComponent: React.FC<ProductShowProps> = ({ subcategoryId }) => 
     const baseUrl =
         process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
+
     useEffect(() => {
         if (subcategoryId) {
             fetchProducts(subcategoryId);

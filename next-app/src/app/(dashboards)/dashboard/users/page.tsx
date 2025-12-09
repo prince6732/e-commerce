@@ -31,7 +31,7 @@ function Users() {
     const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
     const [userToToggle, setUserToToggle] = useState<User | null>(null);
 
-    const uploadUrl = (`${process.env.NEXT_PUBLIC_UPLOAD_BASE}/storage`) || "https://api.zelton.co.in";
+    const uploadUrl = (`${process.env.NEXT_PUBLIC_UPLOAD_BASE}/storage`) || "http://localhost:8000";
 
     useEffect(() => {
         fetchUsers();

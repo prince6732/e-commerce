@@ -270,8 +270,17 @@ class AuthController extends Controller
                 'token' => 'required|string',
             ]);
 
+            // Configure Guzzle client with SSL certificate
+            $httpClient = new \GuzzleHttp\Client([
+                'verify' => base_path('cacert.pem')
+            ]);
+
             // Verify the Google token
-            $client = new \Google_Client(['client_id' => config('services.google.client_id')]);
+            $client = new \Google_Client([
+                'client_id' => config('services.google.client_id')
+            ]);
+            $client->setHttpClient($httpClient);
+            
             $payload = $client->verifyIdToken($request->token);
 
             if (!$payload) {

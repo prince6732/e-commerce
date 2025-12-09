@@ -17,7 +17,6 @@ import Modal from "@/components/(sheared)/Modal";
 
 const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
-
 interface ShippingFormData {
     fullName: string;
     phoneNumber: string;

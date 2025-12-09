@@ -110,6 +110,9 @@ Route::middleware(['auth:sanctum', 'check.user.status'])->group(function () {
     
     // ========== ADMIN: USER MANAGEMENT ==========
     Route::middleware('role:Admin')->group(function () {
+        // Dashboard Statistics
+        Route::get('/admin/dashboard/statistics', [App\Http\Controllers\DashboardController::class, 'getStatistics']);
+
         Route::get('/admin/users', [UserController::class, 'index']);
         Route::get('/admin/users/statistics', [UserController::class, 'getStatistics']);
         Route::get('/admin/users/{id}', [UserController::class, 'show']);

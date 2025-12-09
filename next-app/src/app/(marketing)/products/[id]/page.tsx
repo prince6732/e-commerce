@@ -52,7 +52,7 @@ const ProductPage = () => {
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.zelton.co.in/api";
     const baseUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
-
+        
     const fetchLiveRatingSummary = async (showLoading = false) => {
         if (!id) return;
         try {
