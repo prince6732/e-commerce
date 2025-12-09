@@ -3,51 +3,64 @@
 import { useState } from 'react';
 import { Mail, Phone, MapPin, Send, CheckCircle, Loader2 } from 'lucide-react';
 import { submitContactMessage } from '../../../../utils/contactUsApi';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as Yup from 'yup';
+
+const contactSchema = Yup.object().shape({
+    name: Yup.string()
+        .required('Name is required')
+        .min(2, 'Name must be at least 2 characters')
+        .max(100, 'Name must not exceed 100 characters')
+        .matches(/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces'),
+    email: Yup.string()
+        .required('Email is required')
+        .email('Please enter a valid email address')
+        .max(255, 'Email must not exceed 255 characters'),
+    phone_number: Yup.string()
+        .required('Phone number is required')
+        .matches(/^[0-9+\-\s()]+$/, 'Please enter a valid phone number')
+        .min(10, 'Phone number must be at least 10 digits')
+        .max(20, 'Phone number must not exceed 20 characters'),
+    message: Yup.string()
+        .required('Message is required')
+        .min(10, 'Message must be at least 10 characters')
+        .max(1000, 'Message must not exceed 1000 characters')
+});
+
+interface ContactFormData {
+    name: string;
+    email: string;
+    phone_number: string;
+    message: string;
+}
 
 export default function ContactUsPage() {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone_number: '',
-        message: ''
-    });
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [errors, setErrors] = useState<Record<string, string[]>>({});
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-        // Clear error for this field
-        if (errors[e.target.name]) {
-            setErrors({ ...errors, [e.target.name]: [] });
-        }
-    };
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors }
+    } = useForm<ContactFormData>({
+        resolver: yupResolver(contactSchema)
+    });
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const onSubmit = async (data: ContactFormData) => {
         setLoading(true);
-        setErrors({});
         setSuccess(false);
 
         try {
-            const response = await submitContactMessage(formData);
+            const response = await submitContactMessage(data);
             if (response.success) {
                 setSuccess(true);
-                setFormData({
-                    name: '',
-                    email: '',
-                    phone_number: '',
-                    message: ''
-                });
+                reset();
                 setTimeout(() => setSuccess(false), 5000);
             }
         } catch (error: any) {
-            if (error.response?.data?.errors) {
-                setErrors(error.response.data.errors);
-            }
+            console.error('Error submitting contact form:', error);
         } finally {
             setLoading(false);
         }
@@ -175,7 +188,7 @@ export default function ContactUsPage() {
                                     </div>
                                 )}
 
-                                <form onSubmit={handleSubmit} className="space-y-6">
+                                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                                     <div>
                                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                                             Your Name *
@@ -183,17 +196,17 @@ export default function ContactUsPage() {
                                         <input
                                             type="text"
                                             id="name"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleChange}
+                                            {...register('name')}
                                             className={`w-full px-4 py-3 rounded-xl border ${
                                                 errors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
                                             } focus:ring-2 focus:border-transparent transition-all`}
                                             placeholder="John Doe"
-                                            required
                                         />
                                         {errors.name && (
-                                            <p className="mt-1 text-sm text-red-600">{errors.name[0]}</p>
+                                            <p className="mt-2 text-sm text-red-600 flex items-start gap-1">
+                                                <span className="text-red-500 font-bold">⚠</span>
+                                                {errors.name.message}
+                                            </p>
                                         )}
                                     </div>
 
@@ -205,17 +218,17 @@ export default function ContactUsPage() {
                                             <input
                                                 type="email"
                                                 id="email"
-                                                name="email"
-                                                value={formData.email}
-                                                onChange={handleChange}
+                                                {...register('email')}
                                                 className={`w-full px-4 py-3 rounded-xl border ${
                                                     errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
                                                 } focus:ring-2 focus:border-transparent transition-all`}
                                                 placeholder="john@example.com"
-                                                required
                                             />
                                             {errors.email && (
-                                                <p className="mt-1 text-sm text-red-600">{errors.email[0]}</p>
+                                                <p className="mt-2 text-sm text-red-600 flex items-start gap-1">
+                                                    <span className="text-red-500 font-bold">⚠</span>
+                                                    {errors.email.message}
+                                                </p>
                                             )}
                                         </div>
 
@@ -226,17 +239,17 @@ export default function ContactUsPage() {
                                             <input
                                                 type="tel"
                                                 id="phone_number"
-                                                name="phone_number"
-                                                value={formData.phone_number}
-                                                onChange={handleChange}
+                                                {...register('phone_number')}
                                                 className={`w-full px-4 py-3 rounded-xl border ${
                                                     errors.phone_number ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
                                                 } focus:ring-2 focus:border-transparent transition-all`}
                                                 placeholder="+91 9729310456"
-                                                required
                                             />
                                             {errors.phone_number && (
-                                                <p className="mt-1 text-sm text-red-600">{errors.phone_number[0]}</p>
+                                                <p className="mt-2 text-sm text-red-600 flex items-start gap-1">
+                                                    <span className="text-red-500 font-bold">⚠</span>
+                                                    {errors.phone_number.message}
+                                                </p>
                                             )}
                                         </div>
                                     </div>
@@ -247,18 +260,18 @@ export default function ContactUsPage() {
                                         </label>
                                         <textarea
                                             id="message"
-                                            name="message"
-                                            value={formData.message}
-                                            onChange={handleChange}
+                                            {...register('message')}
                                             rows={6}
                                             className={`w-full px-4 py-3 rounded-xl border ${
                                                 errors.message ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
                                             } focus:ring-2 focus:border-transparent transition-all resize-none`}
                                             placeholder="Tell us how we can help you..."
-                                            required
                                         ></textarea>
                                         {errors.message && (
-                                            <p className="mt-1 text-sm text-red-600">{errors.message[0]}</p>
+                                            <p className="mt-2 text-sm text-red-600 flex items-start gap-1">
+                                                <span className="text-red-500 font-bold">⚠</span>
+                                                {errors.message.message}
+                                            </p>
                                         )}
                                     </div>
 
