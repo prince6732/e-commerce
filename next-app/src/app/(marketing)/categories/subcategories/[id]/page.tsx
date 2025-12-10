@@ -285,8 +285,8 @@ export default function SubCategoriesPage() {
                                             key={sub.id}
                                             onClick={() => handleModalSubcategoryClick(sub.id)}
                                             className={`group cursor-pointer p-4 rounded-lg transition-all duration-200 border-2 ${selectedSubcategory === sub.id
-                                                    ? 'border-blue-500 bg-blue-50'
-                                                    : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                                                ? 'border-blue-500 bg-blue-50'
+                                                : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                                                 }`}
                                         >
                                             <div className="flex flex-col items-center text-center">
@@ -387,7 +387,8 @@ export default function SubCategoriesPage() {
             {/* ✅ Automatically show first subcategory's products */}
             {selectedSubcategory && (
                 <div className="container mx-auto mt-10">
-                    <ProductShow subcategoryId={selectedSubcategory} />
+                    <ProductShow subcategoryId={selectedSubcategory}
+                        subcategoryName={subcategories.find(sub => sub.id === selectedSubcategory)?.name} />
                 </div>
             )}
         </>
