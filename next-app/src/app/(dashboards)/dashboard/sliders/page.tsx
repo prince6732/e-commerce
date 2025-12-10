@@ -23,7 +23,7 @@ const schema = yup.object({
     link: yup.string().nullable().url("Please enter a valid URL"),
     open_in_new_tab: yup.boolean(),
     status: yup.boolean(),
-    image: yup.mixed().nullable(),
+    image: yup.mixed().required('Image is required for the slider'),
 });
 
 type FormData = yup.InferType<typeof schema>;
@@ -40,6 +40,10 @@ function SlidersManagement() {
     const [draggedItem, setDraggedItem] = useState<Slider | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const { showLoader, hideLoader } = useLoader();
+
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
 
     const {
         register,
@@ -240,34 +244,55 @@ function SlidersManagement() {
                 </div>
 
                 {/* Drag and Drop Info */}
-                <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-700 flex items-center gap-2">
-                        <GripVertical className="h-4 w-4" />
-                        Drag and drop rows to reorder sliders. Changes will be saved automatically.
-                    </p>
-                </div>
+                {sliders.length > 1 && (
+                    <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-700 flex items-center gap-2">
+                            <GripVertical className="h-4 w-4" />
+                            Drag and drop rows to reorder sliders. Changes will be saved automatically.
+                        </p>
+                    </div>
+                )}
 
                 {/* table */}
-                <div className={`overflow-x-auto scrollbar rounded-2xl shadow border border-gc-300/30 bg-transparent ${isDragging ? 'bg-blue-50/20' : ''}`}>
-                    <table className="w-full min-w-[800px] text-sm text-left">
-                        <thead className="  uppercase text-xs font-semibold text-gray-700">
+                <div
+                    className={`overflow-x-auto scrollbar rounded-2xl shadow-lg border border-gray-200 bg-white ${isDragging ? "ring-2 ring-orange-300/50" : ""
+                        }`}
+                >
+                    <table className="w-full min-w-[900px] text-sm text-left">
+                        <thead className="bg-gray-50/60 border-b border-gray-200">
                             <tr>
-                                <th className="px-3 py-4 w-10"></th>
-                                <th className="px-6 py-4">S.No.</th>
-                                <th className="px-6 py-4">Image</th>
-                                <th className="px-6 py-4">Title</th>
-                                <th className="px-6 py-4">Sub Title</th>
-                                <th className="px-6 py-4">Link</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-end">Action</th>
+                                <th className="w-10"></th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                    S.No.
+                                </th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                    Image
+                                </th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                    Title
+                                </th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                    Description
+                                </th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                    Link
+                                </th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                    Status
+                                </th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gc-300/30 text-gray-700">
+
+                        <tbody className="divide-y cursor-move divide-gray-100 text-gray-700">
                             {sliders.length ? (
                                 sliders.map((slider, index) => (
                                     <tr
                                         key={slider.id}
-                                        className={`bg-white/5 hover:bg-white/10 transition cursor-move ${isDragging ? 'select-none' : ''}`}
+                                        className={`transition-colors ${isDragging ? "opacity-50" : "hover:bg-gray-50/60"
+                                            } cursor-grab active:cursor-grabbing`}
                                         draggable
                                         onDragStart={(e) => handleDragStart(e, slider)}
                                         onDragEnd={handleDragEnd}
@@ -275,30 +300,48 @@ function SlidersManagement() {
                                         onDragLeave={handleDragLeave}
                                         onDrop={(e) => handleDrop(e, slider)}
                                     >
-                                        <td className="px-3 py-4">
-                                            <GripVertical className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                                        <td className="px-3">
+                                            <GripVertical className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                                         </td>
-                                        <td className="px-6 py-4">{index + 1}</td>
-                                        <td className="px-6 py-4">
+
+                                        <td className="px-4 py-4 font-medium text-gray-900">
+                                            {index + 1}
+                                        </td>
+
+                                        <td className="px-4 py-3">
                                             {slider.image ? (
                                                 <img
+                                                    onClick={() => {
+                                                        setImagePreviewUrl(`${basePath}${slider.image}`);
+                                                        setIsImageModalOpen(true);
+                                                    }}
                                                     src={`${basePath}${slider.image}`}
                                                     alt={slider.title}
-                                                    className="h-16 w-30 rounded object-cover"
+                                                    className="h-14 w-24 rounded-lg object-cover shadow-sm cursor-pointer hover:scale-105 transition-transform"
                                                 />
+
                                             ) : (
-                                                <span>No Image</span>
+                                                <span className="text-gray-400">No Image</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4">{slider.title}</td>
-                                        <td className="px-6 py-4">{slider.description}</td>
-                                        <td className="px-6 py-4">
+
+                                        <td className="px-4 py-4 font-medium">{slider.title}</td>
+
+                                        <td className="px-4 py-4">
+                                            {slider.description ? (
+                                                <span className="text-gray-900">{slider.description}</span>
+
+                                            ) : (
+                                                <span className="text-gray-400">No Description</span>
+                                            )}
+                                        </td>
+
+                                        <td className="px-4 py-4">
                                             {slider.link ? (
                                                 <a
                                                     href={slider.link}
                                                     target={slider.open_in_new_tab ? "_blank" : "_self"}
-                                                    rel="noopener noreferrer"
-                                                    className="text-orange-500 hover:text-orange-600 underline max-w-[150px] block truncate"
+                                                    className="text-orange-600 hover:text-orange-700 underline truncate max-w-[160px] inline-block"
                                                     title={slider.link}
                                                 >
                                                     {slider.link}
@@ -307,9 +350,10 @@ function SlidersManagement() {
                                                 <span className="text-gray-400">No Link</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4">
+
+                                        <td className="px-4 py-4">
                                             <span
-                                                className={`px-3 py-1 rounded-full text-xs font-medium ${slider.status
+                                                className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${slider.status
                                                     ? "bg-green-100 text-green-700"
                                                     : "bg-red-100 text-red-700"
                                                     }`}
@@ -317,17 +361,20 @@ function SlidersManagement() {
                                                 {slider.status ? "Active" : "Inactive"}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2">
+
+                                        <td className="px-4 py-4">
+                                            <div className="flex gap-2">
                                                 <button
                                                     onClick={() => openModal(slider)}
-                                                    className="size-10 bg-gc-300/30 hover:bg-orange-400 flex justify-center items-center rounded-full"
+                                                    className="p-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition flex items-center justify-center"
+                                                    title="Edit"
                                                 >
                                                     <Pencil className="h-4 w-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => confirmDelete(slider)}
-                                                    className="size-10 bg-gc-300/30 hover:bg-orange-400 flex justify-center items-center rounded-full"
+                                                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition flex items-center justify-center"
+                                                    title="Delete"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
@@ -337,7 +384,10 @@ function SlidersManagement() {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={6} className="text-center text-zinc-400 py-8 italic">
+                                    <td
+                                        colSpan={8}
+                                        className="text-center text-gray-500 py-8 italic"
+                                    >
                                         No Sliders Found
                                     </td>
                                 </tr>
@@ -345,6 +395,7 @@ function SlidersManagement() {
                         </tbody>
                     </table>
                 </div>
+
 
                 {/* modal */}
                 <Modal
@@ -361,7 +412,7 @@ function SlidersManagement() {
                         onSubmit={handleSubmit(onSubmit)}
                         className="grid gap-8 bg-gradient-to-br from-white to-white text-gray-100 p-6 rounded-2xl border border-black/10 backdrop-blur-lg shadow-xl"
                     >
-                        {/* Title & Sub Title */}
+                        {/* Title & Description */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Title */}
                             <div>
@@ -377,15 +428,15 @@ function SlidersManagement() {
                                 <p className="text-sm text-red-400 mt-1">{errors.title?.message}</p>
                             </div>
 
-                            {/* Sub Title */}
+                            {/* Description */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-900 mb-1">
-                                    Sub Title
+                                    Description
                                 </label>
                                 <input
                                     {...register("description")}
                                     type="text"
-                                    placeholder="Enter Sub Title"
+                                    placeholder="Enter Description"
                                     className="w-full min-h-12 py-2 px-4 rounded-xl bg-white/10 border border-black/10 placeholder-gray-400 text-black focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200"
                                 />
                             </div>
@@ -445,15 +496,15 @@ function SlidersManagement() {
                                     directory="sliders"
                                     aspectRatio={16 / 9}
                                 />
-                                <div>
+                                <div className="ms-14">
                                     {previewImage ? (
                                         <img
                                             src={`${process.env.NEXT_PUBLIC_UPLOAD_BASE}${previewImage}`}
                                             alt="Slider Preview"
-                                            className="mt-1 h-24 w-40 rounded-xl object-cover border border-black/10 shadow-md"
+                                            className="mt-1 h-40 w-40 rounded-xl object-cover border border-black/10 shadow-md"
                                         />
                                     ) : (
-                                        <div className="mt-1 h-24 w-40 rounded-xl border border-black/10 flex items-center justify-center text-xs text-gray-400 bg-white/5">
+                                        <div className="mt-1 h-40 w-40 rounded-xl border border-black/10 flex items-center justify-center text-xs text-gray-400 bg-white/5">
                                             No Image
                                         </div>
                                     )}
@@ -521,6 +572,31 @@ function SlidersManagement() {
                         </button>
                     </div>
                 </Modal>
+
+
+                {/* Image Preview Modal */}
+                <Modal
+                    isOpen={isImageModalOpen}
+                    onClose={() => {
+                        setIsImageModalOpen(false);
+                        setImagePreviewUrl(null);
+                    }}
+                    title="Preview Image"
+                    width="max-w-4xl"
+                >
+                    <div className="flex justify-center items-center p-4">
+                        {imagePreviewUrl ? (
+                            <img
+                                src={imagePreviewUrl}
+                                alt="Slider Full View"
+                                className="max-h-[70vh] rounded-xl object-contain shadow-lg"
+                            />
+                        ) : (
+                            <p className="text-center text-gray-500">No Image Found</p>
+                        )}
+                    </div>
+                </Modal>
+
             </div>
         </ProtectedRoute>
     );

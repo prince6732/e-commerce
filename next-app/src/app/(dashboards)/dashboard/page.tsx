@@ -256,7 +256,7 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-orange-600">{formatCurrency(order.total_amount)}</p>
+                      <p className="text-lg font-bold text-orange-600">{formatCurrency(Number(order.total_amount))}</p>
                     </div>
                   </div>
                 ))}

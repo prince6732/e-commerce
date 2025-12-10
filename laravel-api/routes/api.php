@@ -16,6 +16,8 @@ use App\Http\Controllers\VariantAttributeValueController;
 use App\Http\Controllers\VariantController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ContactMessageController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ThemesController;
@@ -95,7 +97,7 @@ Route::post('/confirm-delivery/{token}', [OrderController::class, 'confirmDelive
 Route::get('/test-cashfree', [PaymentController::class, 'testCredentials']);
 
 // Contact us route (public)
-Route::post('/contact-us', [App\Http\Controllers\ContactMessageController::class, 'store']);
+Route::post('/contact-us', [ContactMessageController::class, 'store']);
 
 // ==========================================
 // PROTECTED ROUTES (Authentication Required)
@@ -107,12 +109,13 @@ Route::middleware(['auth:sanctum', 'check.user.status'])->group(function () {
     Route::get('/user', [AuthController::class, 'me']);
     Route::get('/all_users', [AuthController::class, 'allUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    
-    // ========== ADMIN: USER MANAGEMENT ==========
+
+    // ========== ADMIN ONLY ROUTES ==========
     Route::middleware('role:Admin')->group(function () {
         // Dashboard Statistics
-        Route::get('/admin/dashboard/statistics', [App\Http\Controllers\DashboardController::class, 'getStatistics']);
+        Route::get('/admin/dashboard/statistics', [DashboardController::class, 'getStatistics']);
 
+        // User Management
         Route::get('/admin/users', [UserController::class, 'index']);
         Route::get('/admin/users/statistics', [UserController::class, 'getStatistics']);
         Route::get('/admin/users/{id}', [UserController::class, 'show']);
@@ -120,11 +123,23 @@ Route::middleware(['auth:sanctum', 'check.user.status'])->group(function () {
         Route::post('/admin/users/{id}/unblock', [UserController::class, 'unblockUser']);
         Route::post('/admin/users/{id}/toggle-status', [UserController::class, 'toggleStatus']);
 
-        // ========== ADMIN: CONTACT MESSAGES ==========
-        Route::get('/admin/contact-messages', [App\Http\Controllers\ContactMessageController::class, 'index']);
-        Route::get('/admin/contact-messages/{id}', [App\Http\Controllers\ContactMessageController::class, 'show']);
-        Route::patch('/admin/contact-messages/{id}/mark-read', [App\Http\Controllers\ContactMessageController::class, 'markAsRead']);
-        Route::delete('/admin/contact-messages/{id}', [App\Http\Controllers\ContactMessageController::class, 'destroy']);
+        // Contact Messages
+        Route::get('/admin/contact-messages', [ContactMessageController::class, 'index']);
+        Route::get('/admin/contact-messages/{id}', [ContactMessageController::class, 'show']);
+        Route::patch('/admin/contact-messages/{id}/mark-read', [ContactMessageController::class, 'markAsRead']);
+        Route::delete('/admin/contact-messages/{id}', [ContactMessageController::class, 'destroy']);
+
+        // Order Management
+        Route::get('/admin/orders', [OrderController::class, 'adminIndex']);
+        Route::patch('/admin/orders/{id}/status', [OrderController::class, 'adminUpdateStatus']);
+        Route::get('/admin/orders/stats', [OrderController::class, 'getOrderStats']);
+        Route::get('/admin/orders/completed', [OrderController::class, 'getCompletedOrders']);
+        Route::get('/admin/orders/completed/{id}', [OrderController::class, 'getCompletedOrderDetails']);
+
+        // Image Management
+        Route::get('/images/get-files/{directory}', [ImageController::class, 'getFiles']);
+        Route::post('/images/upload', [ImageController::class, 'upload']);
+        Route::delete('/images', [ImageController::class, 'delete']);
     });
 
     // ========== USER PROFILE ==========
@@ -180,11 +195,6 @@ Route::middleware(['auth:sanctum', 'check.user.status'])->group(function () {
     // ========== ADMIN: SETTINGS MANAGEMENT ==========
     Route::put('/update-settings/{setting}', [SettingController::class, 'update']);
 
-    // ========== ADMIN: IMAGE MANAGEMENT ==========
-    Route::get('/images/get-files/{directory}', [ImageController::class, 'getFiles']);
-    Route::post('/images/upload', [ImageController::class, 'upload']);
-    Route::delete('/images', [ImageController::class, 'delete']);
-
     // ========== USER: CART MANAGEMENT ==========
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart/add', [CartController::class, 'store']);
@@ -222,11 +232,4 @@ Route::middleware(['auth:sanctum', 'check.user.status'])->group(function () {
     // ========== USER: PAYMENT MANAGEMENT ==========
     Route::post('/payment/initiate', [PaymentController::class, 'initiatePayment']);
     Route::post('/payment/verify', [PaymentController::class, 'verifyPayment']);
-
-    // ========== ADMIN: ORDER MANAGEMENT ==========
-    Route::get('/admin/orders', [OrderController::class, 'adminIndex']);
-    Route::patch('/admin/orders/{id}/status', [OrderController::class, 'adminUpdateStatus']);
-    Route::get('/admin/orders/stats', [OrderController::class, 'getOrderStats']);
-    Route::get('/admin/orders/completed', [OrderController::class, 'getCompletedOrders']);
-    Route::get('/admin/orders/completed/{id}', [OrderController::class, 'getCompletedOrderDetails']);
 });

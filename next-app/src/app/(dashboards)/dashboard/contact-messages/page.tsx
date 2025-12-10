@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Mail, Search, Trash2, Eye, X, Phone, Calendar, CheckCircle2, Loader2 } from 'lucide-react';
 import { deleteContactMessage, getContactMessages, markMessageAsRead, type ContactMessage } from '../../../../../utils/contactUsApi';
+import Modal from '@/components/(sheared)/Modal';
+import { useLoader } from '@/context/LoaderContext';
 
 export default function ContactMessagesPage() {
     const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -12,6 +14,15 @@ export default function ContactMessagesPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
     const [showModal, setShowModal] = useState(false);
+    const [messageToDelete, setMessageToDelete] = useState<ContactMessage | null>(
+        null
+    );
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const { showLoader, hideLoader } = useLoader();
+
+
 
     useEffect(() => {
         fetchMessages();
@@ -30,14 +41,34 @@ export default function ContactMessagesPage() {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this message?')) return;
+    // const handleDelete = async (id: number) => {
+    //     if (!confirm('Are you sure you want to delete this message?')) return;
 
+    //     try {
+    //         await deleteContactMessage(id);
+    //         fetchMessages();
+    //     } catch (error) {
+    //         console.error('Failed to delete message:', error);
+    //     }
+    // };
+    const confirmDelete = (message: ContactMessage) => {
+        setMessageToDelete(message);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if (!messageToDelete) return;
+        showLoader();
         try {
-            await deleteContactMessage(id);
+            await deleteContactMessage(messageToDelete.id);
+            setSuccessMessage("Message deleted successfully!");
             fetchMessages();
-        } catch (error) {
-            console.error('Failed to delete message:', error);
+        } catch {
+            setErrorMessage("Failed to delete message");
+        } finally {
+            hideLoader();
+            setIsDeleteModalOpen(false);
+            setMessageToDelete(null);
         }
     };
 
@@ -175,7 +206,7 @@ export default function ContactMessagesPage() {
                                                         <Eye className="w-4 h-4" />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(message.id)}
+                                                        onClick={() => confirmDelete(message)}
                                                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                         title="Delete message"
                                                     >
@@ -217,88 +248,116 @@ export default function ContactMessagesPage() {
                 )}
             </div>
 
-            {/* View Modal */}
-            {showModal && selectedMessage && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-gray-900">Message Details</h2>
+            <Modal
+                isOpen={showModal && !!selectedMessage}
+                onClose={() => {
+                    setShowModal(false);
+                    setSelectedMessage(null);
+                }}
+                title="Message Details"
+                width="max-w-2xl"
+            >
+                {selectedMessage && (
+                    <div className="p-6 space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-medium text-gray-500 mb-1 block">Name</label>
+                                <p className="text-gray-900 font-medium">{selectedMessage?.name}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-500 mb-1 block">Status</label>
+                                <span className={`inline-flex items-center gap-1 px-2 py-1 ${selectedMessage?.is_read
+                                    ? 'bg-gray-100 text-gray-700'
+                                    : 'bg-orange-100 text-orange-700'
+                                    } text-xs rounded-full`}
+                                >
+                                    {selectedMessage?.is_read
+                                        ? <CheckCircle2 className="w-3 h-3" />
+                                        : <Mail className="w-3 h-3" />}
+                                    {selectedMessage?.is_read ? 'Read' : 'New'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium text-gray-500 mb-1 flex items-center gap-2">
+                                <Mail className="w-4 h-4" /> Email
+                            </label>
+                            <p className="text-gray-900">{selectedMessage?.email}</p>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium text-gray-500 mb-1 flex items-center gap-2">
+                                <Phone className="w-4 h-4" /> Phone Number
+                            </label>
+                            <p className="text-gray-900">{selectedMessage?.phone_number}</p>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium text-gray-500 mb-1 flex items-center gap-2">
+                                <Calendar className="w-4 h-4" /> Received
+                            </label>
+                            <p className="text-gray-900">{formatDate(selectedMessage?.created_at)}</p>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium text-gray-500 mb-2 block">Message</label>
+                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                    {selectedMessage?.message}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-4">
                             <button
-                                onClick={() => setShowModal(false)}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setSelectedMessage(null);
+                                }}
+                                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                             >
-                                <X className="w-5 h-5" />
+                                Close
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    handleDelete();
+                                    setShowModal(false);
+                                }}
+                                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center justify-center gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
                             </button>
                         </div>
-
-                        <div className="p-6 space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500 mb-1 block">Name</label>
-                                    <p className="text-gray-900 font-medium">{selectedMessage.name}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500 mb-1 block">Status</label>
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 ${selectedMessage.is_read ? 'bg-gray-100 text-gray-700' : 'bg-orange-100 text-orange-700'} text-xs rounded-full`}>
-                                        {selectedMessage.is_read ? <CheckCircle2 className="w-3 h-3" /> : <Mail className="w-3 h-3" />}
-                                        {selectedMessage.is_read ? 'Read' : 'New'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 mb-1 flex items-center gap-2">
-                                    <Mail className="w-4 h-4" />
-                                    Email
-                                </label>
-                                <p className="text-gray-900">{selectedMessage.email}</p>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 mb-1 flex items-center gap-2">
-                                    <Phone className="w-4 h-4" />
-                                    Phone Number
-                                </label>
-                                <p className="text-gray-900">{selectedMessage.phone_number}</p>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 mb-1 flex items-center gap-2">
-                                    <Calendar className="w-4 h-4" />
-                                    Received
-                                </label>
-                                <p className="text-gray-900">{formatDate(selectedMessage.created_at)}</p>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 mb-2 block">Message</label>
-                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedMessage.message}</p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    onClick={() => setShowModal(false)}
-                                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                                >
-                                    Close
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        handleDelete(selectedMessage.id);
-                                        setShowModal(false);
-                                    }}
-                                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center justify-center gap-2"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
                     </div>
+                )}
+            </Modal>
+
+            {/* Delete Confirm Modal */}
+            <Modal
+                width="max-w-xl"
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Confirm Delete"
+            >
+                <p className="text-gray-900">Are you sure you want to delete this message?</p>
+                <div className="mt-4 flex justify-end space-x-4">
+                    <button
+                        onClick={() => setIsDeleteModalOpen(false)}
+                        className="rounded bg-gray-500 px-4 py-2 text-white"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleDelete}
+                        className="rounded bg-red-500 px-4 py-2 text-white"
+                    >
+                        Delete
+                    </button>
                 </div>
-            )}
+            </Modal>
         </div>
     );
 }
