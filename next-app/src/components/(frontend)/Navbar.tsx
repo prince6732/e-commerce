@@ -49,6 +49,8 @@ const Navbar = () => {
 
   const [categories, setCategories] = useState<any[]>([]);
   const [topSubcategories, setTopSubcategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [isBrandsOpen, setBrandsOpen] = useState(false);
   const [isSearchOpen, setSearchOpen] = useState(false);
   const [isCartOpen, setCartOpen] = useState(false);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -99,6 +101,16 @@ const Navbar = () => {
       }
     };
 
+    const getBrands = async () => {
+      try {
+        const response = await axios.get('/api/brands');
+        setBrands(response.data || []);
+      } catch (error) {
+        console.error('Error fetching brands:', error);
+        setBrands([]);
+      }
+    };
+
     const getTopSubcategories = async () => {
       try {
         const response = await axios.get('/api/subcategories-with-products?limit=8&min_products=1&order_by=products_count&order_direction=desc');
@@ -123,6 +135,7 @@ const Navbar = () => {
 
     getCategories();
     getTopSubcategories();
+    getBrands();
   }, []);
 
   const handleMouseEnter = () => {
@@ -443,10 +456,88 @@ const Navbar = () => {
               )}
             </div>
 
-            <Link href="/contact-us" style={{
+            {/* Brands Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setBrandsOpen(true)}
+              onMouseLeave={() => setBrandsOpen(false)}
+            >
+              <button
+
+                style={{
+                  color: themes?.text_color || "#000",
+                }}
+                className="relative py-2 px-4 text-gray-700 font-medium hover:text-orange-600 transition-all duration-300 group flex items-center gap-1"
+              >
+                 <span onClick={() => router.push('/brands')}>Brands</span>
+                <RiArrowDownSLine className={`text-xl transition-transform duration-300 ${isBrandsOpen ? 'rotate-180' : ''
+                  }`} />
+                <div className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
+                  style={{
+                    backgroundImage: `linear-gradient(${gradientDirection}, ${gradientStart}, ${gradientEnd})`,
+                  }}
+                ></div>
+              </button>
+
+              {isBrandsOpen && (
+                <div className="absolute top-full left-0 mt-2 w-72 bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-top-2 duration-200 z-50">
+                  <div className="p-4">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 px-2">Our Brands</h3>
+                    <div className="max-h-96 overflow-y-auto space-y-1">
+                      {brands.length > 0 ? (
+                        brands.filter(brand => brand.status).map((brand) => (
+                          <Link
+                            key={brand.id}
+                            href={`/brands/${brand.id}`}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 transition-all duration-300 group"
+                            onClick={() => setBrandsOpen(false)}
+                          >
+                            {brand.image1 ? (
+                              <Image
+                                src={`${basePath}${brand.image1}`}
+                                alt={brand.name}
+                                width={40}
+                                height={40}
+                                className="object-cover rounded-lg"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                {brand.name?.charAt(0).toUpperCase() || "B"}
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-800 group-hover:text-orange-600 transition-colors">
+                                {brand.name}
+                              </div>
+                            </div>
+                          </Link>
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <RiSearchLine className="text-2xl text-gray-400" />
+                          </div>
+                          <p className="text-gray-500">No brands available</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {brands.length > 0 && (
+                    <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 border-t border-gray-100">
+                      <Link href="/brands" className="text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors">
+                        View all brands →
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Link href="/about_us" style={{
               color: themes?.text_color || "#000", // fallback to black
             }} className="relative py-2 px-4 text-gray-700 font-medium hover:text-orange-600 transition-all duration-300 group">
-              <span>Contact Us</span>
+              <span>About Us</span>
               <div className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                 style={{
                   backgroundImage: `linear-gradient(${gradientDirection}, ${gradientStart}, ${gradientEnd})`,
@@ -454,18 +545,10 @@ const Navbar = () => {
               ></div>
             </Link>
 
-            {/* <Link href="/sale" className="relative py-2 px-4 text-red-600 font-medium hover:text-red-700 transition-all duration-300 group">
-              <span className="flex items-center gap-1">
-                Sale
-                <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full animate-pulse">HOT</span>
-              </span>
-              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all duration-300"></div>
-            </Link> */}
-
-            <Link href="/about_us" style={{
+            <Link href="/contact-us" style={{
               color: themes?.text_color || "#000", // fallback to black
             }} className="relative py-2 px-4 text-gray-700 font-medium hover:text-orange-600 transition-all duration-300 group">
-              <span>About</span>
+              <span>Contact Us</span>
               <div className="absolute bottom-0 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
                 style={{
                   backgroundImage: `linear-gradient(${gradientDirection}, ${gradientStart}, ${gradientEnd})`,

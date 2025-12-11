@@ -6,6 +6,11 @@ export const fetchBrands = async () => {
     return response.data;
 };
 
+export const getBrandById = async (id: string) => {
+    const response = await axios.get<Brand>(`/api/brands/${id}`);
+    return response.data;
+};
+
 export const createBrand = async (data: FormData) => {
     const response = await axios.post<Brand>(`/api/create-brand`, data);
     return response.data;
