@@ -90,6 +90,20 @@ function CheckoutPageContent() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+    // Success Modal state
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [orderDetails, setOrderDetails] = useState<{ orderNumber: string; amount: number } | null>(null);
+
+    // Auto-redirect after showing success modal for 3 seconds
+    useEffect(() => {
+        if (showSuccessModal) {
+            const timer = setTimeout(() => {
+                router.push('/orders');
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [showSuccessModal, router]);
+
     // React Hook Form with Yup validation
     const {
         register,
@@ -252,20 +266,20 @@ function CheckoutPageContent() {
                         console.warn("Order placed successfully but failed to clear cart");
                     }
 
-                    // Show success message
-                    setSuccessMessage(`Order placed successfully! Order Number: ${response.data?.order_number || 'N/A'}`);
-
-                    // Navigate to orders page after a brief delay
-                    setTimeout(() => {
-                        router.push(`/orders`);
-                    }, 2000);
+                    // Show success modal with order details
+                    setOrderDetails({
+                        orderNumber: response.data?.order_number || 'N/A',
+                        amount: response.data?.total || finalTotal
+                    });
+                    setShowSuccessModal(true);
                 } catch (error) {
                     console.error("Error clearing cart after order placement:", error);
-                    // Still navigate even if cart clearing fails
-                    setSuccessMessage(`Order placed successfully! Order Number: ${response.data?.order_number || 'N/A'}`);
-                    setTimeout(() => {
-                        router.push(`/orders`);
-                    }, 2000);
+                    // Still show success modal even if cart clearing fails
+                    setOrderDetails({
+                        orderNumber: response.data?.order_number || 'N/A',
+                        amount: response.data?.total || finalTotal
+                    });
+                    setShowSuccessModal(true);
                 }
             } else {
                 setErrorMessage(response.message || "Failed to place order. Please try again.");
@@ -885,9 +899,92 @@ function CheckoutPageContent() {
             {errorMessage && (
                 <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />
             )}
-            {successMessage && (
-                <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />
-            )}
+
+            {/* Success Modal */}
+            <Modal
+                isOpen={showSuccessModal}
+                onClose={() => {
+                    setShowSuccessModal(false);
+                    router.push('/orders');
+                }}
+                title=""
+                width="max-w-xl"
+            >
+                <div className="text-center py-6">
+                    {/* Success Animation */}
+                    <div className="mb-6 flex justify-center">
+                        <div className="relative">
+                            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
+                                <CheckCircle2 className="w-12 h-12 text-green-600" />
+                            </div>
+                            <div className="absolute inset-0 w-24 h-24 bg-green-200 rounded-full animate-ping opacity-20"></div>
+                        </div>
+                    </div>
+
+                    {/* Success Message */}
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Order Placed Successfully! 🎉</h2>
+                    <p className="text-gray-600 mb-6">Thank you for your purchase</p>
+
+                    {/* Order Details */}
+                    {orderDetails && (
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 mb-6 border border-green-200">
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-gray-600">Order Number</span>
+                                    <span className="text-lg font-bold text-gray-900">{orderDetails.orderNumber}</span>
+                                </div>
+                                <div className="h-px bg-green-200"></div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-gray-600">Total Amount</span>
+                                    <span className="text-2xl font-bold text-green-600">₹{orderDetails.amount}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Next Steps */}
+                    <div className="bg-blue-50 rounded-xl p-6 mb-6 text-left border border-blue-200">
+                        <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <Package className="w-5 h-5 text-blue-600" />
+                            What's Next?
+                        </h3>
+                        <ul className="space-y-2 text-sm text-gray-700">
+                            <li className="flex items-start gap-2">
+                                <span className="text-blue-600 font-bold mt-0.5">1.</span>
+                                <span>You'll receive an order confirmation email shortly</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-blue-600 font-bold mt-0.5">2.</span>
+                                <span>We'll prepare your package for shipment</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-blue-600 font-bold mt-0.5">3.</span>
+                                <span>Track your order in the Orders section</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                            onClick={() => router.push('/orders')}
+                            className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all font-medium flex items-center justify-center gap-2 shadow-lg shadow-green-200"
+                        >
+                            <Package className="w-5 h-5" />
+                            View My Orders
+                        </button>
+                        <button
+                            onClick={() => {
+                                setShowSuccessModal(false);
+                                router.push('/');
+                            }}
+                            className="flex-1 px-6 py-3 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium border-2 border-gray-200"
+                        >
+                            Continue Shopping
+                        </button>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Cashfree SDK */}
             <Script

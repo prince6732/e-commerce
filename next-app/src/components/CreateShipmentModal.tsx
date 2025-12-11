@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Loader2, Package, Truck, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, Package, Truck, AlertCircle, CheckCircle } from 'lucide-react';
 import { createDelhiveryShipment } from '../../utils/delhiveryApi';
+import Modal from './(sheared)/Modal';
 
 type CreateShipmentModalProps = {
   isOpen: boolean;
@@ -20,8 +21,6 @@ const CreateShipmentModal: React.FC<CreateShipmentModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  if (!isOpen) return null;
 
   const handleCreateShipment = async () => {
     setLoading(true);
@@ -43,79 +42,61 @@ const CreateShipmentModal: React.FC<CreateShipmentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Package className="w-6 h-6 text-blue-600" />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Create Shipment - Order #${orderNumber}`}
+      width="max-w-md"
+    >
+      <div className="space-y-4">
+        {!success && !error && (
+          <>
+            <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-blue-800">
+                <p className="font-semibold mb-1">Before creating shipment:</p>
+                <ul className="list-disc list-inside space-y-1 text-blue-700">
+                  <li>Ensure order has complete shipping address</li>
+                  <li>Verify customer phone number is correct</li>
+                  <li>Check product is ready for pickup</li>
+                  <li>Package is properly sealed and labeled</li>
+                </ul>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-800">Create Shipment</h3>
-              <p className="text-sm text-gray-500">Order #{orderNumber}</p>
+
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+              <Truck className="w-5 h-5 text-gray-600" />
+              <div className="text-sm">
+                <p className="font-semibold text-gray-800">Delhivery Courier</p>
+                <p className="text-gray-600">Will generate waybill number for tracking</p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {error && (
+          <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-red-800">
+              <p className="font-semibold mb-1">Error</p>
+              <p>{error}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            disabled={loading}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        )}
 
-        {/* Body */}
-        <div className="p-6">
-          {!success && !error && (
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-blue-800">
-                  <p className="font-semibold mb-1">Before creating shipment:</p>
-                  <ul className="list-disc list-inside space-y-1 text-blue-700">
-                    <li>Ensure order has complete shipping address</li>
-                    <li>Verify customer phone number is correct</li>
-                    <li>Check product is ready for pickup</li>
-                    <li>Package is properly sealed and labeled</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                <Truck className="w-5 h-5 text-gray-600" />
-                <div className="text-sm">
-                  <p className="font-semibold text-gray-800">Delhivery Courier</p>
-                  <p className="text-gray-600">Will generate waybill number for tracking</p>
-                </div>
-              </div>
+        {success && (
+          <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-green-800">
+              <p className="font-semibold mb-1">Success!</p>
+              <p>{success}</p>
             </div>
-          )}
+          </div>
+        )}
 
-          {error && (
-            <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-red-800">
-                <p className="font-semibold mb-1">Error</p>
-                <p>{error}</p>
-              </div>
-            </div>
-          )}
-
-          {success && (
-            <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-green-800">
-                <p className="font-semibold mb-1">Success!</p>
-                <p>{success}</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
+        {/* Footer Buttons */}
         {!success && (
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
             <button
               onClick={onClose}
               disabled={loading}
@@ -143,7 +124,7 @@ const CreateShipmentModal: React.FC<CreateShipmentModalProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </Modal>
   );
 };
 
