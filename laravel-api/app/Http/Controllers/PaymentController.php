@@ -43,13 +43,12 @@ class PaymentController extends Controller
         ]);
 
         try {
-            DB::beginTransaction();
-
             $userId = Auth::id();
             $user = Auth::user();
             $cartItems = collect();
             $isSingleItem = false;
 
+            // VALIDATE stock but DO NOT create order yet
             if ($request->has('product_id') && $request->has('variant_id')) {
                 $isSingleItem = true;
                 $product = Product::findOrFail($request->product_id);
@@ -65,7 +64,7 @@ class PaymentController extends Controller
                 if ($variant->stock < $request->quantity) {
                     return response()->json([
                         'success' => false,
-                        'message' => "Insufficient stock. Only {$variant->stock} items available",
+                        'message' => "Sorry! Only {$variant->stock} items are currently available for this product.",
                     ], 400);
                 }
 
@@ -95,15 +94,22 @@ class PaymentController extends Controller
                 if ($cartItems->isEmpty()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'No items in cart to order',
+                        'message' => 'Your cart is empty. Please add items to your cart before placing an order.',
                     ], 400);
                 }
 
                 foreach ($cartItems as $item) {
+                    if (!$item->variant) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Product variant not found. Please refresh your cart.",
+                        ], 400);
+                    }
+
                     if ($item->variant->stock < $item->quantity) {
                         return response()->json([
                             'success' => false,
-                            'message' => "Insufficient stock for {$item->product->name} - {$item->variant->title}",
+                            'message' => "Sorry! Only {$item->variant->stock} items are currently available for {$item->product->name}.",
                         ], 400);
                     }
                 }
@@ -116,40 +122,21 @@ class PaymentController extends Controller
 
             $orderNumber = Order::generateOrderNumber();
 
-            $order = Order::create([
-                'order_number' => $orderNumber,
-                'user_id' => $userId,
-                'status' => 'pending',
-                'payment_method' => 'online',
-                'payment_status' => 'pending',
-                'subtotal' => $subtotal,
-                'shipping_fee' => $shippingFee,
-                'tax' => $tax,
-                'total' => $total,
-                'shipping_address' => $request->shipping_address,
-                'billing_address' => $request->billing_address ?? $request->shipping_address,
-                'notes' => $request->notes,
+            // Store order data in session for creating order after payment success
+            session([
+                'pending_order_' . $orderNumber => [
+                    'cart_items' => $cartItems->toArray(),
+                    'is_single_item' => $isSingleItem,
+                    'shipping_address' => $request->shipping_address,
+                    'billing_address' => $request->billing_address ?? $request->shipping_address,
+                    'notes' => $request->notes,
+                    'subtotal' => $subtotal,
+                    'shipping_fee' => $shippingFee,
+                    'tax' => $tax,
+                    'total' => $total,
+                    'user_id' => $userId,
+                ],
             ]);
-
-            foreach ($cartItems as $cartItem) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $cartItem->product_id,
-                    'variant_id' => $cartItem->variant_id,
-                    'quantity' => $cartItem->quantity,
-                    'price' => $cartItem->price,
-                    'total' => $cartItem->total,
-                    'selected_attributes' => $cartItem->selected_attributes,
-                ]);
-
-                // Reserve stock? Or wait until payment success?
-                // Usually, we reserve stock to prevent overselling during payment.
-                // If payment fails, we should release it.
-                // For simplicity, let's decrement now and handle rollback if needed (or cron job to clean up pending orders).
-                $cartItem->variant->decrement('stock', $cartItem->quantity);
-            }
-
-            $order->addTracking('pending', 'Order initiated, waiting for payment', 'Online Store');
 
             // Call Cashfree API
             Log::info('Cashfree Payment Request', [
@@ -202,30 +189,28 @@ class PaymentController extends Controller
             if ($response->successful()) {
                 $paymentData = $response->json();
 
-                // Do NOT clear cart here. Wait for payment success.
-
-                DB::commit();
-
                 return response()->json([
                     'success' => true,
                     'payment_session_id' => $paymentData['payment_session_id'],
-                    'order_id' => $order->id,
                     'order_number' => $orderNumber,
                 ]);
             } else {
-                DB::rollback();
                 Log::error('Cashfree Order Creation Failed', ['response' => $response->body()]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to initiate payment gateway',
+                    'message' => 'Failed to initiate payment gateway. Please try again.',
                     'error' => $response->json(),
                 ], 500);
             }
         } catch (\Exception $e) {
-            DB::rollback();
+            Log::error('Payment Initiation Error', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to initiate order',
+                'message' => 'Failed to initiate payment. Please try again.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -240,6 +225,8 @@ class PaymentController extends Controller
         $orderNumber = $request->order_id;
 
         try {
+            DB::beginTransaction();
+
             $response = Http::withoutVerifying()->withHeaders([
                 'x-client-id' => $this->appId,
                 'x-client-secret' => $this->secretKey,
@@ -250,41 +237,163 @@ class PaymentController extends Controller
                 $orderData = $response->json();
                 $orderStatus = $orderData['order_status'];
 
-                $order = Order::where('order_number', $orderNumber)->firstOrFail();
+                // Check if order already exists
+                $order = Order::where('order_number', $orderNumber)->first();
 
                 if ($orderStatus === 'PAID') {
-                    if ($order->payment_status !== 'paid') {
-                        $order->update([
-                            'payment_status' => 'paid',
-                            'status' => 'confirmed', // Or processing
-                            'transaction_id' => $orderData['cf_order_id'] ?? null, // Or payment reference
+                    if ($order && $order->payment_status === 'paid') {
+                        // Order already processed
+                        DB::commit();
+                        return response()->json([
+                            'success' => true,
+                            'status' => $orderStatus,
+                            'data' => $order,
                         ]);
+                    }
+
+                    // Retrieve pending order data from session
+                    $pendingOrderData = session('pending_order_' . $orderNumber);
+
+                    if (!$pendingOrderData) {
+                        DB::rollback();
+                        Log::error('Pending order data not found in session', ['order_number' => $orderNumber]);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Order session expired. Please contact support.',
+                        ], 400);
+                    }
+
+                    // Validate stock again before creating order
+                    $cartItems = collect($pendingOrderData['cart_items']);
+                    foreach ($cartItems as $item) {
+                        $variant = Variant::find($item['variant_id']);
+                        if (!$variant || $variant->stock < $item['quantity']) {
+                            DB::rollback();
+                            Log::error('Stock validation failed during payment verification', [
+                                'order_number' => $orderNumber,
+                                'variant_id' => $item['variant_id'],
+                                'requested' => $item['quantity'],
+                                'available' => $variant ? $variant->stock : 0,
+                            ]);
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Product is out of stock. Your payment will be refunded within 5-7 business days.',
+                            ], 400);
+                        }
+                    }
+
+                    // Create order NOW that payment is successful and stock is available
+                    if (!$order) {
+                        $order = Order::create([
+                            'order_number' => $orderNumber,
+                            'user_id' => $pendingOrderData['user_id'],
+                            'status' => 'confirmed',
+                            'payment_method' => 'online',
+                            'payment_status' => 'paid',
+                            'subtotal' => $pendingOrderData['subtotal'],
+                            'shipping_fee' => $pendingOrderData['shipping_fee'],
+                            'tax' => $pendingOrderData['tax'],
+                            'total' => $pendingOrderData['total'],
+                            'shipping_address' => $pendingOrderData['shipping_address'],
+                            'billing_address' => $pendingOrderData['billing_address'],
+                            'notes' => $pendingOrderData['notes'],
+                            'transaction_id' => $orderData['cf_order_id'] ?? null,
+                        ]);
+
+                        // Create order items and decrement stock
+                        foreach ($cartItems as $cartItem) {
+                            OrderItem::create([
+                                'order_id' => $order->id,
+                                'product_id' => $cartItem['product_id'],
+                                'variant_id' => $cartItem['variant_id'],
+                                'quantity' => $cartItem['quantity'],
+                                'price' => $cartItem['price'],
+                                'total' => $cartItem['total'],
+                                'selected_attributes' => $cartItem['selected_attributes'] ?? null,
+                            ]);
+
+                            // Decrement stock
+                            Variant::where('id', $cartItem['variant_id'])
+                                ->decrement('stock', $cartItem['quantity']);
+                        }
+
                         $order->addTracking('confirmed', 'Payment successful', 'Online Store');
 
                         // Clear cart for the user
                         Cart::where('user_id', $order->user_id)->delete();
-                    }
-                } else {
-                    // Handle failed/pending
-                    // If failed, maybe restore stock?
-                }
 
-                return response()->json([
-                    'success' => true,
-                    'status' => $orderStatus,
-                    'data' => $order,
-                ]);
+                        // Clear session data
+                        session()->forget('pending_order_' . $orderNumber);
+
+                        Log::info('Order created successfully after payment verification', [
+                            'order_number' => $orderNumber,
+                            'order_id' => $order->id,
+                        ]);
+                    } else {
+                        // Order exists, just update payment status
+                        $order->update([
+                            'payment_status' => 'paid',
+                            'status' => 'confirmed',
+                            'transaction_id' => $orderData['cf_order_id'] ?? null,
+                        ]);
+                        $order->addTracking('confirmed', 'Payment successful', 'Online Store');
+                    }
+
+                    DB::commit();
+
+                    return response()->json([
+                        'success' => true,
+                        'status' => $orderStatus,
+                        'data' => $order->load(['orderItems.product', 'orderItems.variant']),
+                    ]);
+                } else if ($orderStatus === 'ACTIVE') {
+                    // Payment still in progress
+                    DB::commit();
+                    return response()->json([
+                        'success' => false,
+                        'status' => $orderStatus,
+                        'message' => 'Payment is still being processed. Please wait.',
+                    ]);
+                } else {
+                    // Payment failed or cancelled
+                    // Clear session data
+                    session()->forget('pending_order_' . $orderNumber);
+
+                    DB::commit();
+
+                    Log::info('Payment failed or cancelled', [
+                        'order_number' => $orderNumber,
+                        'status' => $orderStatus,
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'status' => $orderStatus,
+                        'message' => 'Payment was not successful. Please try again.',
+                    ]);
+                }
             } else {
+                DB::rollback();
+                Log::error('Failed to verify payment with Cashfree', [
+                    'order_number' => $orderNumber,
+                    'response' => $response->body(),
+                ]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to verify payment',
+                    'message' => 'Failed to verify payment. Please contact support.',
                     'error' => $response->json(),
                 ], 500);
             }
         } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Payment Verification Error', [
+                'order_number' => $orderNumber,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Error verifying payment',
+                'message' => 'Error verifying payment. Please contact support.',
                 'error' => $e->getMessage(),
             ], 500);
         }

@@ -559,7 +559,7 @@ const OrdersPage = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
+                                            {order.payment_method === 'cash_on_delivery' ? 'Cash on Delivery' : 'Online Payment'}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${order.payment_status === 'paid'

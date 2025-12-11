@@ -92,17 +92,40 @@ class OrderController extends Controller
             $cartItems = $cartQuery->get();
 
             if ($cartItems->isEmpty()) {
+                DB::rollback();
                 return response()->json([
                     'success' => false,
-                    'message' => 'No items in cart to order',
+                    'message' => 'Your cart is empty. Please add items to your cart before placing an order.',
                 ], 400);
             }
 
+            // Validate all items before creating order
             foreach ($cartItems as $item) {
-                if ($item->variant->stock < $item->quantity) {
+                if (!$item->variant) {
+                    DB::rollback();
+                    Log::error('Cart item has no variant', [
+                        'user_id' => $userId,
+                        'cart_item_id' => $item->id,
+                        'product_id' => $item->product_id,
+                    ]);
                     return response()->json([
                         'success' => false,
-                        'message' => "Insufficient stock for {$item->product->name} - {$item->variant->title}",
+                        'message' => 'Product variant not found. Please refresh your cart and try again.',
+                    ], 400);
+                }
+
+                if ($item->variant->stock < $item->quantity) {
+                    DB::rollback();
+                    Log::warning('Insufficient stock during cart order', [
+                        'user_id' => $userId,
+                        'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'requested' => $item->quantity,
+                        'available' => $item->variant->stock,
+                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Sorry! Only {$item->variant->stock} items are currently available for {$item->product->name}.",
                     ], 400);
                 }
             }
@@ -153,6 +176,12 @@ class OrderController extends Controller
 
             $order->load(['orderItems.product', 'orderItems.variant', 'trackingRecords']);
 
+            Log::info('Order placed successfully', [
+                'user_id' => $userId,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Order placed successfully',
@@ -160,9 +189,14 @@ class OrderController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollback();
+            Log::error('Order placement failed', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to place order',
+                'message' => 'Failed to place order. Please try again.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -188,6 +222,7 @@ class OrderController extends Controller
             $variant = Variant::findOrFail($request->variant_id);
 
             if ($variant->product_id !== $product->id) {
+                DB::rollback();
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid variant for the selected product',
@@ -195,9 +230,17 @@ class OrderController extends Controller
             }
 
             if ($variant->stock < $request->quantity) {
+                DB::rollback();
+                Log::warning('Insufficient stock during single item order', [
+                    'user_id' => $userId,
+                    'product_id' => $request->product_id,
+                    'variant_id' => $request->variant_id,
+                    'requested' => $request->quantity,
+                    'available' => $variant->stock,
+                ]);
                 return response()->json([
                     'success' => false,
-                    'message' => "Insufficient stock. Only {$variant->stock} items available",
+                    'message' => "Sorry! Only {$variant->stock} items are currently available for this product.",
                 ], 400);
             }
 
@@ -240,6 +283,12 @@ class OrderController extends Controller
 
             $order->load(['orderItems.product', 'orderItems.variant', 'trackingRecords']);
 
+            Log::info('Single item order placed successfully', [
+                'user_id' => $userId,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Order placed successfully',
@@ -247,9 +296,16 @@ class OrderController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollback();
+            Log::error('Single item order placement failed', [
+                'user_id' => Auth::id(),
+                'product_id' => $request->product_id ?? null,
+                'variant_id' => $request->variant_id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to place order',
+                'message' => 'Failed to place order. Please try again.',
                 'error' => $e->getMessage(),
             ], 500);
         }

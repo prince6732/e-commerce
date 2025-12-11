@@ -14,6 +14,8 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Modal from "@/components/(sheared)/Modal";
+import ErrorMessage from "@/components/(sheared)/ErrorMessage";
+import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 
 const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
@@ -84,10 +86,9 @@ function CheckoutPageContent() {
     const [paymentStatus, setPaymentStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
     const [paymentMessage, setPaymentMessage] = useState("Verifying payment...");
 
-    // Toast notification state
-    const [showToast, setShowToast] = useState(false);
-    const [toastType, setToastType] = useState<"success" | "error" | "info" | null>(null);
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    // Message notification state
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // React Hook Form with Yup validation
     const {
@@ -111,25 +112,6 @@ function CheckoutPageContent() {
             country: "India",
         },
     });
-
-    // Toast notification helper
-    const showToastMessage = (message: string, type: "success" | "error" | "info") => {
-        setToastMessage(message);
-        setToastType(type);
-        setShowToast(true);
-    };
-
-    // Auto-hide toast after 4 seconds
-    useEffect(() => {
-        if (showToast) {
-            const timer = setTimeout(() => {
-                setShowToast(false);
-                setToastMessage(null);
-                setToastType(null);
-            }, 4000);
-            return () => clearTimeout(timer);
-        }
-    }, [showToast]);
 
     useEffect(() => {
         // Wait for auth to finish loading before making redirect decisions
@@ -220,6 +202,9 @@ function CheckoutPageContent() {
 
     const handlePlaceOrder = handleSubmit(async (data: ShippingFormData) => {
         setLoading(true);
+        setErrorMessage(null);
+        setSuccessMessage(null);
+
         try {
             const shippingAddress = `${data.fullName}\n${data.phoneNumber}\n${data.addressLine1}\n${data.addressLine2 ? data.addressLine2 + '\n' : ''}${data.city}, ${data.state} ${data.postalCode}\n${data.country}`;
 
@@ -245,17 +230,18 @@ function CheckoutPageContent() {
                             redirectTarget: "_self"
                         });
                     } else {
-                        showToastMessage(response.data.message || "Failed to initiate payment", "error");
+                        setErrorMessage(response.data.message || "Failed to initiate payment. Please try again.");
                         setLoading(false);
                     }
                 } catch (error: any) {
                     console.error("Payment initiation failed:", error);
-                    showToastMessage(error.response?.data?.message || "Failed to initiate payment", "error");
+                    setErrorMessage(error.response?.data?.message || "Failed to initiate payment. Please try again.");
                     setLoading(false);
                 }
                 return; // Stop here, let Cashfree handle the rest
             }
 
+            // COD order placement
             const response = await placeOrderFromCart(orderData);
 
             if (response.success) {
@@ -264,16 +250,10 @@ function CheckoutPageContent() {
                     const cartCleared = await clearCart();
                     if (!cartCleared) {
                         console.warn("Order placed successfully but failed to clear cart");
-                        showToastMessage("Order placed successfully, but cart clearing failed. Page will refresh to update cart.", "info");
-                        // Force refresh cart to ensure it's updated after a delay
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
-                        return;
                     }
 
                     // Show success message
-                    showToastMessage(`🎉 Order placed successfully! Order Number: ${response.data?.order_number || 'N/A'}`, "success");
+                    setSuccessMessage(`Order placed successfully! Order Number: ${response.data?.order_number || 'N/A'}`);
 
                     // Navigate to orders page after a brief delay
                     setTimeout(() => {
@@ -282,17 +262,17 @@ function CheckoutPageContent() {
                 } catch (error) {
                     console.error("Error clearing cart after order placement:", error);
                     // Still navigate even if cart clearing fails
-                    showToastMessage(`🎉 Order placed successfully! Order Number: ${response.data?.order_number || 'N/A'}`, "success");
+                    setSuccessMessage(`Order placed successfully! Order Number: ${response.data?.order_number || 'N/A'}`);
                     setTimeout(() => {
                         router.push(`/orders`);
                     }, 2000);
                 }
             } else {
-                showToastMessage(response.message || "❌ Failed to place order. Please try again.", "error");
+                setErrorMessage(response.message || "Failed to place order. Please try again.");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Order placement failed:", error);
-            showToastMessage("❌ Failed to place order. Please check your connection and try again.", "error");
+            setErrorMessage(error.response?.data?.message || "Failed to place order. Please check your connection and try again.");
         } finally {
             if (paymentMethod !== 'online') {
                 setLoading(false);
@@ -901,43 +881,14 @@ function CheckoutPageContent() {
                 </div>
             </div>
 
-            {/* Toast Notification */}
-            {showToast && toastMessage && (
-                <div className={`fixed top-6 right-6 z-[9999] px-6 py-4 rounded-lg shadow-xl border-l-4 transition-all duration-300 transform ${showToast ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-                    } ${toastType === 'success'
-                        ? 'bg-green-50 border-green-500 text-green-800'
-                        : toastType === 'error'
-                            ? 'bg-red-50 border-red-500 text-red-800'
-                            : 'bg-blue-50 border-blue-500 text-blue-800'
-                    } max-w-md`}>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${toastType === 'success'
-                                ? 'bg-green-100'
-                                : toastType === 'error'
-                                    ? 'bg-red-100'
-                                    : 'bg-blue-100'
-                                }`}>
-                                {toastType === 'success' && <CheckCircle2 className="w-4 h-4 text-green-600" />}
-                                {toastType === 'error' && <X className="w-4 h-4 text-red-600" />}
-                                {toastType === 'info' && <Package className="w-4 h-4 text-blue-600" />}
-                            </div>
-                            <p className="font-medium">{toastMessage}</p>
-                        </div>
-                        <button
-                            onClick={() => setShowToast(false)}
-                            className={`ml-4 ${toastType === 'success'
-                                ? 'text-green-600 hover:text-green-800'
-                                : toastType === 'error'
-                                    ? 'text-red-600 hover:text-red-800'
-                                    : 'text-blue-600 hover:text-blue-800'
-                                } transition-colors`}
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
+            {/* Message Notifications */}
+            {errorMessage && (
+                <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />
             )}
+            {successMessage && (
+                <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />
+            )}
+
             {/* Cashfree SDK */}
             <Script
                 src="https://sdk.cashfree.com/js/v3/cashfree.js"
