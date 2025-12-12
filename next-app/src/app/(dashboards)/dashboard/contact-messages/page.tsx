@@ -5,6 +5,8 @@ import { Mail, Search, Trash2, Eye, X, Phone, Calendar, CheckCircle2, Loader2 } 
 import { deleteContactMessage, getContactMessages, markMessageAsRead, type ContactMessage } from '../../../../../utils/contactUsApi';
 import Modal from '@/components/(sheared)/Modal';
 import { useLoader } from '@/context/LoaderContext';
+import ErrorMessage from '@/components/(sheared)/ErrorMessage';
+import SuccessMessage from '@/components/(sheared)/SuccessMessage';
 
 export default function ContactMessagesPage() {
     const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -36,6 +38,7 @@ export default function ContactMessagesPage() {
             setTotalPages(response.data.last_page);
         } catch (error) {
             console.error('Failed to fetch messages:', error);
+            setErrorMessage("Failed to load contact messages. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -103,6 +106,8 @@ export default function ContactMessagesPage() {
 
     return (
         <div className="p-6">
+            {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+            {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
             {/* Header */}
             <div className="mb-6">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Contact Messages</h1>

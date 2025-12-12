@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Search, Loader2, Package, AlertCircle } from 'lucide-react';
 import TrackingTimeline from '@/components/TrackingTimeline';
 import { DelhiveryTrackingData, trackByWaybill } from '../../../../utils/delhiveryApi';
+import ErrorMessage from '@/components/(sheared)/ErrorMessage';
+import SuccessMessage from '@/components/(sheared)/SuccessMessage';
 
 const PublicTrackingPage = () => {
     const [waybill, setWaybill] = useState('');
@@ -11,12 +13,15 @@ const PublicTrackingPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [trackingData, setTrackingData] = useState<DelhiveryTrackingData | null>(null);
     const [searched, setSearched] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const handleTrack = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!waybill.trim()) {
             setError('Please enter a waybill number');
+            setErrorMessage('Please enter a waybill number');
             return;
         }
 
@@ -24,11 +29,15 @@ const PublicTrackingPage = () => {
             setLoading(true);
             setError(null);
             setSearched(true);
+            setErrorMessage(null);
 
             const response = await trackByWaybill(waybill.trim());
             setTrackingData(response.tracking_data);
+            setSuccessMessage('Shipment tracking information loaded successfully!');
         } catch (err: any) {
-            setError(err?.error || err?.message || 'Failed to fetch tracking information');
+            const errorMsg = err?.error || err?.message || 'Failed to fetch tracking information';
+            setError(errorMsg);
+            setErrorMessage(errorMsg);
             setTrackingData(null);
         } finally {
             setLoading(false);
@@ -37,6 +46,8 @@ const PublicTrackingPage = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 px-4">
+            {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+            {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">

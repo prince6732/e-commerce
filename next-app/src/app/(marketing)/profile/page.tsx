@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import ErrorMessage from '@/components/(sheared)/ErrorMessage';
+import SuccessMessage from '@/components/(sheared)/SuccessMessage';
 import {
   RiUserLine,
   RiMailLine,
@@ -117,7 +119,8 @@ const ProfilePage = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [apiErrors, setApiErrors] = useState<any>({});
 
   // Profile form setup
@@ -199,13 +202,13 @@ const ProfilePage = () => {
 
     // Validate file size (2MB max)
     if (file.size > 2 * 1024 * 1024) {
-      setApiErrors({ profile_picture: 'File size must be less than 2MB.' });
+      setErrorMessage('File size must be less than 2MB.');
       return;
     }
 
     // Validate file type
     if (!['image/jpeg', 'image/png', 'image/jpg', 'image/gif'].includes(file.type)) {
-      setApiErrors({ profile_picture: 'File must be an image (JPEG, PNG, JPG, GIF).' });
+      setErrorMessage('File must be an image (JPEG, PNG, JPG, GIF).');
       return;
     }
 
@@ -226,15 +229,13 @@ const ProfilePage = () => {
         setProfilePictureUrl(response.data.data.profile_picture_url);
         setSuccessMessage('Profile picture updated successfully!');
         await refetchUser();
-        setTimeout(() => setSuccessMessage(''), 5000);
       }
     } catch (error: any) {
       console.error('Profile picture upload error:', error);
       if (error.response?.data?.errors) {
         setApiErrors(error.response.data.errors);
-      } else {
-        setApiErrors({ profile_picture: 'Failed to upload profile picture. Please try again.' });
       }
+      setErrorMessage('Failed to upload profile picture. Please try again.');
     } finally {
       setUploadingPicture(false);
       hideLoader();
@@ -245,18 +246,18 @@ const ProfilePage = () => {
 
   const handleProfilePictureDelete = async () => {
     setUploadingPicture(true);
-    setApiErrors({}); try {
+    setApiErrors({});
+    try {
       const response = await axios.delete('/api/profile/delete-picture');
 
       if (response.data.success) {
         setProfilePictureUrl(null);
         setSuccessMessage('Profile picture deleted successfully!');
         await refetchUser();
-        setTimeout(() => setSuccessMessage(''), 5000);
       }
     } catch (error: any) {
       console.error('Profile picture delete error:', error);
-      setApiErrors({ profile_picture: 'Failed to delete profile picture. Please try again.' });
+      setErrorMessage('Failed to delete profile picture. Please try again.');
     } finally {
       setUploadingPicture(false);
       hideLoader();
@@ -266,7 +267,7 @@ const ProfilePage = () => {
   const handleProfileUpdate = async (data: ProfileFormData) => {
     setSubmitting(true);
     setApiErrors({});
-    setSuccessMessage('');
+    setSuccessMessage(null);
 
     try {
       const response = await axios.put('/api/profile', data);
@@ -275,16 +276,13 @@ const ProfilePage = () => {
         setSuccessMessage('Profile updated successfully!');
         setIsEditing(false);
         await refetchUser(); // Refresh user data
-
-        setTimeout(() => setSuccessMessage(''), 5000);
       }
     } catch (error: any) {
       console.error('Profile update error:', error);
       if (error.response?.data?.errors) {
         setApiErrors(error.response.data.errors);
-      } else {
-        setApiErrors({ general: 'Failed to update profile. Please try again.' });
       }
+      setErrorMessage('Failed to update profile. Please try again.');
     } finally {
       setSubmitting(false);
       hideLoader();
@@ -294,7 +292,7 @@ const ProfilePage = () => {
   const handlePasswordUpdate = async (data: PasswordFormData) => {
     setSubmitting(true);
     setApiErrors({});
-    setSuccessMessage('');
+    setSuccessMessage(null);
 
     try {
       const response = await axios.put('/api/change-password', data);
@@ -307,16 +305,13 @@ const ProfilePage = () => {
           new_password: '',
           new_password_confirmation: ''
         });
-
-        setTimeout(() => setSuccessMessage(''), 5000);
       }
     } catch (error: any) {
       console.error('Password update error:', error);
       if (error.response?.data?.errors) {
         setApiErrors(error.response.data.errors);
-      } else {
-        setApiErrors({ general: 'Failed to update password. Please try again.' });
       }
+      setErrorMessage('Failed to update password. Please try again.');
     } finally {
       setSubmitting(false);
       hideLoader();
@@ -351,6 +346,8 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 py-8">
+      {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+      {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Back Button */}
         <div className="mb-6">

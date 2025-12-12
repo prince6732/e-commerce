@@ -146,18 +146,8 @@ export default function AttributesManagement() {
     return (
         <ProtectedRoute role="Admin">
             <div className="z-[999]">
-                {errorMessage && (
-                    <ErrorMessage
-                        message={errorMessage}
-                        onClose={() => setErrorMessage(null)}
-                    />
-                )}
-                {successMessage && (
-                    <SuccessMessage
-                        message={successMessage}
-                        onClose={() => setSuccessMessage(null)}
-                    />
-                )}
+                {errorMessage && (<ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />)}
+                {successMessage && (<SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />)}
 
                 {/* header */}
                 <div className="p-2 bg-white/5 border border-gc-300/30 rounded-3xl shadow flex items-center justify-between mb-3">

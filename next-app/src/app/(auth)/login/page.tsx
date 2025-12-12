@@ -16,6 +16,8 @@ import { Check, Eye, EyeOff, LogIn } from "lucide-react";
 import { User } from "@/common/interface"; // Use your shared User type
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import axios from "../../../../utils/axios";
+import ErrorMessage from "@/components/(sheared)/ErrorMessage";
+import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 
 const loginSchema = Yup.object().shape({
   email: Yup.string().required("Email is required"),
@@ -40,6 +42,8 @@ export default function LoginPage() {
   const { user, setUserDirectly, loading } = useAuth();
   const [error, setError] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
     register,
@@ -57,13 +61,17 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     setError("");
+    setErrorMessage(null);
     showLoader();
     try {
       const res: LoginResponse = await login(data.email, data.password);
+      setSuccessMessage("Login successful! Redirecting...");
       handleLoginSuccess(res.user, res.token);
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
-      setError(error.response?.data?.message || "Login failed");
+      const errorMsg = error.response?.data?.message || "Login failed";
+      setError(errorMsg);
+      setErrorMessage(errorMsg);
     } finally {
       hideLoader();
     }
@@ -81,6 +89,7 @@ export default function LoginPage() {
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setError("");
+    setErrorMessage(null);
     showLoader();
     try {
       const response = await axios.post('/api/auth/google', {
@@ -88,18 +97,23 @@ export default function LoginPage() {
       });
 
       if (response.data.token && response.data.user) {
+        setSuccessMessage("Google login successful! Redirecting...");
         handleLoginSuccess(response.data.user, response.data.token);
       }
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
-      setError(error.response?.data?.message || "Google login failed");
+      const errorMsg = error.response?.data?.message || "Google login failed";
+      setError(errorMsg);
+      setErrorMessage(errorMsg);
     } finally {
       hideLoader();
     }
   };
 
   const handleGoogleError = () => {
-    setError("Google login failed. Please try again.");
+    const errorMsg = "Google login failed. Please try again.";
+    setError(errorMsg);
+    setErrorMessage(errorMsg);
   };
 
   if (loading || user) {
@@ -112,6 +126,8 @@ export default function LoginPage() {
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10">
+      {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+      {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
       <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8 sm:p-10">
         {/* Logo & Title */}
         <div className="text-center mb-8">

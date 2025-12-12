@@ -6,6 +6,8 @@ import { submitContactMessage } from '../../../../utils/contactUsApi';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
+import ErrorMessage from '@/components/(sheared)/ErrorMessage';
+import SuccessMessage from '@/components/(sheared)/SuccessMessage';
 
 const contactSchema = Yup.object().shape({
     name: Yup.string()
@@ -38,6 +40,8 @@ interface ContactFormData {
 export default function ContactUsPage() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const {
         register,
@@ -51,16 +55,25 @@ export default function ContactUsPage() {
     const onSubmit = async (data: ContactFormData) => {
         setLoading(true);
         setSuccess(false);
+        setErrorMessage(null);
+        setSuccessMessage(null);
 
         try {
             const response = await submitContactMessage(data);
             if (response.success) {
                 setSuccess(true);
+                setSuccessMessage("Thank you for contacting us! We'll get back to you soon.");
                 reset();
-                setTimeout(() => setSuccess(false), 5000);
+                setTimeout(() => {
+                    setSuccess(false);
+                    setSuccessMessage(null);
+                }, 5000);
+            } else {
+                setErrorMessage("Failed to send message. Please try again.");
             }
         } catch (error: any) {
             console.error('Error submitting contact form:', error);
+            setErrorMessage(error.response?.data?.message || "Failed to send message. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -68,6 +81,8 @@ export default function ContactUsPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+            {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+            {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
             {/* Hero Section */}
             <section className="relative bg-gradient-to-r from-orange-500 to-yellow-500 text-white py-20 overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>

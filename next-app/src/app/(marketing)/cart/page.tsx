@@ -7,6 +7,8 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, X } from "lucide-react";
 import imgPlaceholder from "@/public/imagePlaceholder.png";
+import ErrorMessage from "@/components/(sheared)/ErrorMessage";
+import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
 import { fetchThemes } from "../../../../utils/theme";
@@ -24,6 +26,7 @@ type Themes = {
 const CartPage = () => {
     const [themes, setThemes] = useState<Themes | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const { items, count, total, loading, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -126,7 +129,12 @@ const CartPage = () => {
 
     const handleQuantityUpdate = async (cartItemId: number, newQuantity: number) => {
         if (newQuantity < 1) return;
-        await updateQuantity(cartItemId, newQuantity);
+        try {
+            await updateQuantity(cartItemId, newQuantity);
+            setSuccessMessage("Cart quantity updated successfully!");
+        } catch (error) {
+            setErrorMessage("Failed to update cart quantity. Please try again.");
+        }
     };
 
     const handleRemoveItemClick = (cartItemId: number, itemName: string) => {
@@ -137,7 +145,12 @@ const CartPage = () => {
 
     const confirmRemoveItem = async () => {
         if (itemToRemove) {
-            await removeFromCart(itemToRemove);
+            try {
+                await removeFromCart(itemToRemove);
+                setSuccessMessage(`${itemToRemoveName} removed from cart successfully!`);
+            } catch (error) {
+                setErrorMessage("Failed to remove item from cart. Please try again.");
+            }
             setShowRemoveModal(false);
             setItemToRemove(null);
             setItemToRemoveName("");
@@ -149,7 +162,12 @@ const CartPage = () => {
     };
 
     const confirmClearCart = async () => {
-        await clearCart();
+        try {
+            await clearCart();
+            setSuccessMessage("Cart cleared successfully!");
+        } catch (error) {
+            setErrorMessage("Failed to clear cart. Please try again.");
+        }
         setShowClearModal(false);
     };
 
@@ -164,6 +182,8 @@ const CartPage = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+            {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+            {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
             <div className="container mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">

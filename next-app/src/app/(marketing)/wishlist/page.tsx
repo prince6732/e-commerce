@@ -9,6 +9,8 @@ import { Heart, ShoppingCart, ArrowLeft, Trash2 } from "lucide-react";
 import imgPlaceholder from "@/public/imagePlaceholder.png";
 import { getUserLikedProducts } from "../../../../utils/likeApi";
 import { fetchThemes } from "../../../../utils/theme";
+import ErrorMessage from "@/components/(sheared)/ErrorMessage";
+import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 
 type Themes = {
     id: number;
@@ -50,6 +52,7 @@ const LikesPage = () => {
     const router = useRouter();
     const [themes, setThemes] = useState<Themes | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const { user, loading: authLoading } = useAuth();
     const { toggleLike, isLiked, likesLoading } = useLike();
     const [likedProducts, setLikedProducts] = useState<LikedProduct[]>([]);
@@ -89,6 +92,7 @@ const LikesPage = () => {
             }
         } catch (error) {
             console.error('Error fetching liked products:', error);
+            setErrorMessage("Failed to load your wishlist. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -99,6 +103,9 @@ const LikesPage = () => {
         const success = await toggleLike(productId);
         if (success) {
             setLikedProducts(prev => prev.filter(product => product.id !== productId));
+            setSuccessMessage("Product removed from wishlist successfully!");
+        } else {
+            setErrorMessage("Failed to remove product from wishlist. Please try again.");
         }
         setRemovingId(null);
     };
@@ -172,6 +179,8 @@ const LikesPage = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+            {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+            {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
             <div className="container mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">

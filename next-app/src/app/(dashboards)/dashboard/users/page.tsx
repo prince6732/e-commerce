@@ -131,7 +131,7 @@ function Users() {
                         <div className="flex-1 min-w-[250px]">
                             <div className="flex gap-2">
                                 <input
-                                    type="text"
+                                    type="search"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}

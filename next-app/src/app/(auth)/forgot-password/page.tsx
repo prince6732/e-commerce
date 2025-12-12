@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
-
+import ErrorMessage from "@/components/(sheared)/ErrorMessage";
+import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 import Link from "next/link";
 import logo from "@/public/ZeltonHorizontalBlack.png";
 import Image from "next/image";
@@ -14,24 +15,31 @@ export default function ForgotPasswordPage() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         setMessage("");
+        setErrorMessage(null);
+        setSuccessMessage(null);
         setLoading(true);
 
         try {
             const res = await forgotPassword(email);
             setMessage(res.message);
+            setSuccessMessage("Reset code sent successfully! Redirecting...");
 
             setTimeout(() => {
                 router.push("/reset-password");
             }, 1500);
         } catch (err) {
             const error = err as AxiosError<{ message?: string }>;
-            setError(error.response?.data?.message || "Something went wrong");
+            const errorMsg = error.response?.data?.message || "Something went wrong";
+            setError(errorMsg);
+            setErrorMessage(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -39,6 +47,8 @@ export default function ForgotPasswordPage() {
 
     return (
         <section className="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10">
+            {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+            {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
             <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8 sm:p-10">
                 {/* Logo & Title */}
                 <div className="text-center mb-8">

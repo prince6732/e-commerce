@@ -9,6 +9,8 @@ import imgPlaceholder from "@/public/imagePlaceholder.png";
 import { fetchThemes } from "../../../../utils/theme";
 import axios from "../../../../utils/axios";
 import Modal from "@/components/(sheared)/Modal";
+import ErrorMessage from "@/components/(sheared)/ErrorMessage";
+import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 
 const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
@@ -83,6 +85,8 @@ const OrdersPage = () => {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
     const [cancelLoading, setCancelLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     useEffect(() => {
         loadTheme();
@@ -121,6 +125,7 @@ const OrdersPage = () => {
             }
         } catch (error) {
             console.error('Error fetching orders:', error);
+            setErrorMessage("Failed to load orders. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -200,9 +205,17 @@ const OrdersPage = () => {
                 if (selectedOrder && selectedOrder.id === orderToCancel.id) {
                     setSelectedOrder(response.data.data);
                 }
+                setSuccessMessage(`Order #${orderToCancel.order_number} cancelled successfully!`);
                 setShowCancelModal(false);
                 setOrderToCancel(null);
             }
+        } catch (error) {
+            console.error('Error cancelling order:', error);
+            setErrorMessage("Failed to cancel order. Please try again.");
+        } finally {
+            setCancelLoading(false);
+        }
+    };
         } catch (error: any) {
             console.error('Error cancelling order:', error);
             alert(error.response?.data?.message || 'Failed to cancel order');
@@ -250,6 +263,8 @@ const OrdersPage = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+            {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+            {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
             <div className="container mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
