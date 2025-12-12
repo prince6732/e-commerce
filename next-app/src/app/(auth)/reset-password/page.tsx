@@ -8,8 +8,12 @@ import logo from "@/public/ZeltonHorizontalBlack.png";
 import Image from "next/image";
 import { resetPassword } from "../../../../utils/auth";
 import { Check, KeyRound, Lock, Mail } from "lucide-react";
+import { useLoader } from "@/context/LoaderContext";
+import ErrorMessage from "@/components/(sheared)/ErrorMessage";
+import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 export default function ResetPasswordPage() {
     const router = useRouter();
+    const { showLoader, hideLoader } = useLoader();
 
     const [form, setForm] = useState({
         email: "",
@@ -18,9 +22,10 @@ export default function ResetPasswordPage() {
         password_confirmation: "",
     });
 
-    const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -30,19 +35,24 @@ export default function ResetPasswordPage() {
         e.preventDefault();
         setError("");
         setMessage("");
-        setLoading(true);
+        setErrorMessage(null);
+        setSuccessMessage(null);
+        showLoader();
 
         try {
             const res = await resetPassword(form);
             setMessage(res.message);
+            setSuccessMessage(res.message);
 
             // Redirect to login page after success
             setTimeout(() => router.push("/login"), 2000);
         } catch (err) {
             const error = err as AxiosError<{ message?: string }>;
-            setError(error.response?.data?.message || "Something went wrong");
+            const errorMsg = error.response?.data?.message || "Something went wrong";
+            setError(errorMsg);
+            setErrorMessage(errorMsg);
         } finally {
-            setLoading(false);
+            hideLoader();
         }
     };
 
@@ -61,17 +71,8 @@ export default function ResetPasswordPage() {
                     </p>
                 </div>
 
-                {/* Messages */}
-                {message && (
-                    <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-xl mb-4 text-center">
-                        {message}
-                    </div>
-                )}
-                {error && (
-                    <div className="bg-red-100 border border-red-300 text-red-600 px-4 py-3 rounded-xl mb-4 text-center">
-                        {error}
-                    </div>
-                )}
+                {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+                {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
 
                 {/* Reset Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -143,10 +144,9 @@ export default function ResetPasswordPage() {
                     {/* Submit */}
                     <button
                         type="submit"
-                        disabled={loading}
                         className="w-full h-12 rounded-xl font-semibold bg-orange-500 text-white hover:bg-orange-600 hover:shadow-lg transition disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        {loading ? "Resetting..." : "Reset Password"}
+                        Reset Password
                     </button>
                 </form>
 

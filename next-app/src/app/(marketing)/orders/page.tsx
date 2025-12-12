@@ -11,6 +11,7 @@ import axios from "../../../../utils/axios";
 import Modal from "@/components/(sheared)/Modal";
 import ErrorMessage from "@/components/(sheared)/ErrorMessage";
 import SuccessMessage from "@/components/(sheared)/SuccessMessage";
+import { useLoader } from "@/context/LoaderContext";
 
 const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
@@ -74,7 +75,6 @@ const OrdersPage = () => {
     const { user, loading: authLoading } = useAuth();
 
     const [orders, setOrders] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -87,6 +87,7 @@ const OrdersPage = () => {
     const [cancelLoading, setCancelLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const { showLoader, hideLoader } = useLoader();
 
     useEffect(() => {
         loadTheme();
@@ -108,8 +109,8 @@ const OrdersPage = () => {
     };
 
     const fetchOrders = async () => {
+        showLoader();
         try {
-            setLoading(true);
             const params = new URLSearchParams();
 
             if (filter) params.append('status', filter);
@@ -127,7 +128,7 @@ const OrdersPage = () => {
             console.error('Error fetching orders:', error);
             setErrorMessage("Failed to load orders. Please try again.");
         } finally {
-            setLoading(false);
+            hideLoader();
         }
     };
 
@@ -198,6 +199,7 @@ const OrdersPage = () => {
         if (!orderToCancel) return;
 
         setCancelLoading(true);
+        showLoader();
         try {
             const response = await axios.patch(`/api/orders/${orderToCancel.id}/cancel`);
             if (response.data.success) {
@@ -214,6 +216,7 @@ const OrdersPage = () => {
             setErrorMessage("Failed to cancel order. Please try again.");
         } finally {
             setCancelLoading(false);
+            hideLoader();
         }
     };
         } catch (error: any) {

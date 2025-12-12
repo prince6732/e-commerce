@@ -8,6 +8,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import ErrorMessage from '@/components/(sheared)/ErrorMessage';
 import SuccessMessage from '@/components/(sheared)/SuccessMessage';
+import { useLoader } from '@/context/LoaderContext';
 
 const contactSchema = Yup.object().shape({
     name: Yup.string()
@@ -42,6 +43,7 @@ export default function ContactUsPage() {
     const [success, setSuccess] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const { showLoader, hideLoader } = useLoader();
 
     const {
         register,
@@ -57,6 +59,7 @@ export default function ContactUsPage() {
         setSuccess(false);
         setErrorMessage(null);
         setSuccessMessage(null);
+        showLoader();
 
         try {
             const response = await submitContactMessage(data);
@@ -76,6 +79,7 @@ export default function ContactUsPage() {
             setErrorMessage(error.response?.data?.message || "Failed to send message. Please try again.");
         } finally {
             setLoading(false);
+            hideLoader();
         }
     };
 

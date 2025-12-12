@@ -6,6 +6,7 @@ import TrackingTimeline from '@/components/TrackingTimeline';
 import { DelhiveryTrackingData, trackByWaybill } from '../../../../utils/delhiveryApi';
 import ErrorMessage from '@/components/(sheared)/ErrorMessage';
 import SuccessMessage from '@/components/(sheared)/SuccessMessage';
+import { useLoader } from '@/context/LoaderContext';
 
 const PublicTrackingPage = () => {
     const [waybill, setWaybill] = useState('');
@@ -15,6 +16,7 @@ const PublicTrackingPage = () => {
     const [searched, setSearched] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const { showLoader, hideLoader } = useLoader();
 
     const handleTrack = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,6 +32,7 @@ const PublicTrackingPage = () => {
             setError(null);
             setSearched(true);
             setErrorMessage(null);
+            showLoader();
 
             const response = await trackByWaybill(waybill.trim());
             setTrackingData(response.tracking_data);
@@ -41,6 +44,7 @@ const PublicTrackingPage = () => {
             setTrackingData(null);
         } finally {
             setLoading(false);
+            hideLoader();
         }
     };
 

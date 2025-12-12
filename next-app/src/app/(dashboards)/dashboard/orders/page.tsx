@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { getCompletedOrders, getCompletedOrderDetails } from "../../../../../utils/orderApi";
+import { useLoader } from "@/context/LoaderContext";
 
 const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
@@ -91,7 +92,6 @@ const OrdersPage = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [completedOrders, setCompletedOrders] = useState<Order[]>([]);
     const [stats, setStats] = useState<OrderStats | null>(null);
-    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
     const [dateFilter, setDateFilter] = useState({ from: '', to: '' });
@@ -109,6 +109,7 @@ const OrdersPage = () => {
     const [showCreateShipment, setShowCreateShipment] = useState(false);
     const [shipmentOrderId, setShipmentOrderId] = useState<number | null>(null);
     const [shipmentOrderNumber, setShipmentOrderNumber] = useState<string>('');
+    const { showLoader, hideLoader } = useLoader();
 
     useEffect(() => {
         if (activeTab === 'all') {
@@ -172,8 +173,8 @@ const OrdersPage = () => {
     };
 
     const fetchOrders = async () => {
+        showLoader();
         try {
-            setLoading(true);
             const params = new URLSearchParams();
 
             if (filter) params.append('status', filter);
@@ -192,13 +193,13 @@ const OrdersPage = () => {
         } catch (error) {
             console.error('Error fetching orders:', error);
         } finally {
-            setLoading(false);
+            hideLoader();
         }
     };
 
     const fetchCompletedOrders = async () => {
+        showLoader();
         try {
-            setLoading(true);
             const response = await getCompletedOrders({
                 search: searchTerm,
                 from_date: dateFilter.from,
@@ -215,7 +216,7 @@ const OrdersPage = () => {
             console.error('Error fetching completed orders:', error);
             showToastMessage('Failed to fetch completed orders', 'error');
         } finally {
-            setLoading(false);
+            hideLoader();
         }
     };
 
@@ -231,6 +232,7 @@ const OrdersPage = () => {
     };
 
     const handleViewCompletedOrder = async (orderId: number) => {
+        showLoader();
         try {
             setLoadingOrderDetails(true);
             setShowCompletedOrderModal(true);
@@ -249,10 +251,12 @@ const OrdersPage = () => {
             setShowCompletedOrderModal(false);
         } finally {
             setLoadingOrderDetails(false);
+            hideLoader();
         }
     };
 
     const handleConfirmOrder = async (orderId: number) => {
+        showLoader();
         try {
             const response = await axios.patch(`/api/admin/orders/${orderId}/status`, {
                 status: 'confirmed',
@@ -268,6 +272,8 @@ const OrdersPage = () => {
         } catch (error: any) {
             console.error('Error confirming order:', error);
             showToastMessage(error.response?.data?.message || 'Failed to confirm order', 'error');
+        } finally {
+            hideLoader();
         }
     };
 

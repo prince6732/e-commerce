@@ -13,6 +13,7 @@ import { useLike } from "@/context/LikeContext";
 import ProductReviews from "@/components/reviews/ProductReviews";
 import ProductRatingDisplay from "@/components/ui/ProductRatingDisplay";
 import { getSimilarProducts } from "../../../../../utils/similarProducts";
+import { useLoader } from "@/context/LoaderContext";
 
 const ProductPage = () => {
     const { id } = useParams();
@@ -22,7 +23,6 @@ const ProductPage = () => {
     const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
     const [mainImage, setMainImage] = useState<string | null>(null);
     const [galleryImages, setGalleryImages] = useState<string[]>([]);
-    const [loading, setLoading] = useState(true);
     const [selectedOptions, setSelectedOptions] = useState<{ [key: number]: string }>({});
     const [isSpecsOpen, setIsSpecsOpen] = useState(true);
     const [quantity, setQuantity] = useState(1);
@@ -49,6 +49,7 @@ const ProductPage = () => {
     const { addToCart, loading: cartLoading } = useCart();
     const { user } = useAuth();
     const { toggleLike, isLiked, likesLoading } = useLike();
+    const { showLoader, hideLoader } = useLoader();
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.zelton.co.in/api";
     const baseUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
@@ -73,7 +74,7 @@ const ProductPage = () => {
     useEffect(() => {
         if (!id) return;
         const fetchProduct = async () => {
-            setLoading(true);
+            showLoader();
             try {
                 const res = await axios.get(`${apiUrl}/api/get-product/${id}`);
                 if (res.data.res === "success") {
@@ -119,7 +120,7 @@ const ProductPage = () => {
             } catch (e) {
                 console.error(e);
             } finally {
-                setLoading(false);
+                hideLoader();
             }
         };
         fetchProduct();
@@ -127,6 +128,7 @@ const ProductPage = () => {
 
     const fetchSimilarProducts = async (productId: number, page: number = 1) => {
         setLoadingSimilar(true);
+        showLoader();
         try {
             const response = await getSimilarProducts(productId, page, 10);
             const processedProducts = response.products.map((prod: ProductDetail) => ({
@@ -149,6 +151,7 @@ const ProductPage = () => {
             console.error('Error fetching similar products:', error);
         } finally {
             setLoadingSimilar(false);
+            hideLoader();
         }
     };
 

@@ -8,25 +8,26 @@ import {
   AlertTriangle, Mail, Loader2, Eye, Calendar 
 } from 'lucide-react';
 import { DashboardStatistics, getDashboardStatistics } from '../../../../utils/dashboardApi';
+import { useLoader } from '@/context/LoaderContext';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStatistics['data'] | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { showLoader, hideLoader } = useLoader();
 
   useEffect(() => {
     fetchStatistics();
   }, []);
 
   const fetchStatistics = async () => {
+    showLoader();
     try {
-      setLoading(true);
       const response = await getDashboardStatistics();
       setStats(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load statistics');
     } finally {
-      setLoading(false);
+      hideLoader();
     }
   };
 
@@ -58,15 +59,6 @@ export default function DashboardPage() {
     return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
-  if (loading) {
-    return (
-      <ProtectedRoute role="Admin">
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="w-10 h-10 animate-spin text-orange-500" />
-        </div>
-      </ProtectedRoute>
-    );
-  }
 
   if (error || !stats) {
     return (

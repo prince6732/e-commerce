@@ -12,6 +12,9 @@ import logo from "@/public/ZeltonHorizontalBlack.png";
 import Image from "next/image";
 import { verifyEmailCode } from "../../../../utils/auth";
 import { Mail } from "lucide-react";
+import { useLoader } from "@/context/LoaderContext";
+import ErrorMessage from "@/components/(sheared)/ErrorMessage";
+import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 
 const schema = yup.object().shape({
   code: yup.string().required("Verification code is required"),
@@ -25,10 +28,12 @@ export default function EmailVerifyPage() {
   const [email, setEmail] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { showLoader, hideLoader } = useLoader();
 
   useEffect(() => {
     if (!loading && user) {
@@ -53,11 +58,14 @@ export default function EmailVerifyPage() {
   const onSubmit = async (data: FormData) => {
     if (!email) {
       setServerError("Email not found in storage");
+      setErrorMessage("Email not found in storage");
       return;
     }
 
+    showLoader();
     try {
       setServerError(null);
+      setErrorMessage(null);
       const res = await verifyEmailCode({ email, code: data.code });
 
       setSuccess(res.message);
@@ -69,7 +77,11 @@ export default function EmailVerifyPage() {
       }, 2000);
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
-      setServerError(error.response?.data?.message || "Verification failed");
+      const errorMsg = error.response?.data?.message || "Verification failed";
+      setServerError(errorMsg);
+      setErrorMessage(errorMsg);
+    } finally {
+      hideLoader();
     }
   };
 
@@ -97,17 +109,8 @@ export default function EmailVerifyPage() {
           </p>
         </div>
 
-        {/* Success & Error Messages */}
-        {success && (
-          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-xl mb-4 text-center">
-            {success}
-          </div>
-        )}
-        {serverError && (
-          <div className="bg-red-100 border border-red-300 text-red-600 px-4 py-3 rounded-xl mb-4 text-center">
-            {serverError}
-          </div>
-        )}
+        {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
+        {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

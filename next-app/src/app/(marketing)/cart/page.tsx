@@ -9,6 +9,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, X } from "lucide-react";
 import imgPlaceholder from "@/public/imagePlaceholder.png";
 import ErrorMessage from "@/components/(sheared)/ErrorMessage";
 import SuccessMessage from "@/components/(sheared)/SuccessMessage";
+import { useLoader } from "@/context/LoaderContext";
 const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
 import { fetchThemes } from "../../../../utils/theme";
@@ -30,6 +31,7 @@ const CartPage = () => {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const { items, count, total, loading, updateQuantity, removeFromCart, clearCart } = useCart();
+    const { showLoader, hideLoader } = useLoader();
 
     // Modal states
     const [showRemoveModal, setShowRemoveModal] = useState(false);
@@ -41,6 +43,7 @@ const CartPage = () => {
     }, []);
 
     const loadTheme = async () => {
+        showLoader();
         try {
             const data = await fetchThemes();
             if (Array.isArray(data) && data.length > 0) {
@@ -52,6 +55,8 @@ const CartPage = () => {
             }
         } catch {
             setErrorMessage("Failed to fetch theme. Please try again.");
+        } finally {
+            hideLoader();
         }
     };
 
@@ -129,11 +134,14 @@ const CartPage = () => {
 
     const handleQuantityUpdate = async (cartItemId: number, newQuantity: number) => {
         if (newQuantity < 1) return;
+        showLoader();
         try {
             await updateQuantity(cartItemId, newQuantity);
             setSuccessMessage("Cart quantity updated successfully!");
         } catch (error) {
             setErrorMessage("Failed to update cart quantity. Please try again.");
+        } finally {
+            hideLoader();
         }
     };
 
@@ -145,11 +153,14 @@ const CartPage = () => {
 
     const confirmRemoveItem = async () => {
         if (itemToRemove) {
+            showLoader();
             try {
                 await removeFromCart(itemToRemove);
                 setSuccessMessage(`${itemToRemoveName} removed from cart successfully!`);
             } catch (error) {
                 setErrorMessage("Failed to remove item from cart. Please try again.");
+            } finally {
+                hideLoader();
             }
             setShowRemoveModal(false);
             setItemToRemove(null);
@@ -162,11 +173,14 @@ const CartPage = () => {
     };
 
     const confirmClearCart = async () => {
+        showLoader();
         try {
             await clearCart();
             setSuccessMessage("Cart cleared successfully!");
         } catch (error) {
             setErrorMessage("Failed to clear cart. Please try again.");
+        } finally {
+            hideLoader();
         }
         setShowClearModal(false);
     };

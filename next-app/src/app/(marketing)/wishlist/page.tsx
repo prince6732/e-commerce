@@ -11,6 +11,7 @@ import { getUserLikedProducts } from "../../../../utils/likeApi";
 import { fetchThemes } from "../../../../utils/theme";
 import ErrorMessage from "@/components/(sheared)/ErrorMessage";
 import SuccessMessage from "@/components/(sheared)/SuccessMessage";
+import { useLoader } from "@/context/LoaderContext";
 
 type Themes = {
     id: number;
@@ -56,8 +57,8 @@ const LikesPage = () => {
     const { user, loading: authLoading } = useAuth();
     const { toggleLike, isLiked, likesLoading } = useLike();
     const [likedProducts, setLikedProducts] = useState<LikedProduct[]>([]);
-    const [loading, setLoading] = useState(true);
     const [removingId, setRemovingId] = useState<number | null>(null);
+    const { showLoader, hideLoader } = useLoader();
 
     const basePath = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
 
@@ -71,6 +72,7 @@ const LikesPage = () => {
     }, []);
 
     const loadTheme = async () => {
+        showLoader();
         try {
             const data = await fetchThemes();
             if (Array.isArray(data) && data.length > 0) {
@@ -81,11 +83,13 @@ const LikesPage = () => {
             }
         } catch {
             setErrorMessage("Failed to fetch theme. Please try again.");
+        } finally {
+            hideLoader();
         }
     };
     const fetchLikedProducts = async () => {
+        showLoader();
         try {
-            setLoading(true);
             const response = await getUserLikedProducts();
             if (response.res === 'success') {
                 setLikedProducts(response.liked_products);
@@ -94,7 +98,7 @@ const LikesPage = () => {
             console.error('Error fetching liked products:', error);
             setErrorMessage("Failed to load your wishlist. Please try again.");
         } finally {
-            setLoading(false);
+            hideLoader();
         }
     };
 
@@ -158,19 +162,6 @@ const LikesPage = () => {
                         >
                             Login Now
                         </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-                <div className="container mx-auto px-4 py-16">
-                    <div className="text-center">
-                        <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-gray-600">Loading your wishlist...</p>
                     </div>
                 </div>
             </div>
