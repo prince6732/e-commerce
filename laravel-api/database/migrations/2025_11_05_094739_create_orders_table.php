@@ -22,6 +22,12 @@ return new class extends Migration
             $table->enum('payment_method', ['cash_on_delivery', 'online'])->default('cash_on_delivery');
             $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending');
             $table->string('transaction_id')->nullable();
+            $table->string('delhivery_waybill')->nullable();
+            $table->string('delhivery_status')->nullable();
+            $table->timestamp('delhivery_status_updated_at')->nullable();
+            $table->json('delhivery_tracking_data')->nullable();
+            $table->string('courier_name')->default('Delhivery');
+            $table->text('delivery_instructions')->nullable();
             $table->decimal('subtotal', 10, 2);
             $table->decimal('shipping_fee', 10, 2)->default(0);
             $table->decimal('tax', 10, 2)->default(0);
