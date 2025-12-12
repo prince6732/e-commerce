@@ -21,9 +21,7 @@ import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 
 const loginSchema = Yup.object().shape({
   email: Yup.string().required("Email is required"),
-  password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
+  password: Yup.string().required("Password is required"),
 });
 
 export interface LoginFormData {
@@ -72,7 +70,7 @@ export default function LoginPage() {
       const errorMsg = error.response?.data?.message || "Login failed";
       setError(errorMsg);
       setErrorMessage(errorMsg);
-      
+
       // If email not verified, redirect to verification page
       if (error.response?.data?.email_not_verified && error.response?.data?.email) {
         localStorage.setItem("verifyEmail", error.response.data.email);

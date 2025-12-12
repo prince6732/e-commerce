@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
+import * as Yup from "yup";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import ErrorMessage from "@/components/(sheared)/ErrorMessage";
 import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 import Link from "next/link";
@@ -10,8 +13,18 @@ import logo from "@/public/ZeltonHorizontalBlack.png";
 import Image from "next/image";
 import { forgotPassword } from "../../../../utils/auth";
 import { KeyRound, Mail } from "lucide-react";
+
+const schema = Yup.object().shape({
+    email: Yup.string()
+        .email("Please enter a valid email address")
+        .required("Email is required"),
+});
+
+interface ForgotPasswordForm {
+    email: string;
+}
+
 export default function ForgotPasswordPage() {
-    const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
@@ -19,8 +32,15 @@ export default function ForgotPasswordPage() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const router = useRouter();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<ForgotPasswordForm>({
+        resolver: yupResolver(schema),
+    });
+
+    const onSubmit = async (data: ForgotPasswordForm) => {
         setError("");
         setMessage("");
         setErrorMessage(null);
@@ -28,9 +48,12 @@ export default function ForgotPasswordPage() {
         setLoading(true);
 
         try {
-            const res = await forgotPassword(email);
+            const res = await forgotPassword(data.email);
             setMessage(res.message);
             setSuccessMessage("Reset code sent successfully! Redirecting...");
+
+            // Save email to localStorage for reset password page
+            localStorage.setItem("resetPasswordEmail", data.email);
 
             setTimeout(() => {
                 router.push("/reset-password");
@@ -75,7 +98,7 @@ export default function ForgotPasswordPage() {
                 )}
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div>
                         <label className="text-gray-700 font-medium mb-2 block">
                             Email Address
@@ -86,14 +109,17 @@ export default function ForgotPasswordPage() {
                                 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
                             />
                             <input
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
+                                {...register("email")}
                                 type="email"
                                 placeholder="Enter your email"
-                                className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
+                                className={`w-full h-12 pl-10 pr-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-400 transition ${
+                                    errors.email ? "border-red-400" : "border-gray-300"
+                                }`}
                             />
                         </div>
+                        {errors.email && (
+                            <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                        )}
                     </div>
 
                     <button
