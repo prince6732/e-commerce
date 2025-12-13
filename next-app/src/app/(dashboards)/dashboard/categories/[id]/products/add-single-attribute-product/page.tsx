@@ -282,22 +282,25 @@ function VariantProductForm() {
     };
 
     return (
-        <div className="mt-8 w-full mx-auto sm:p-4 md:p-8 p-2 bg-white/90 border border-gray-200 rounded-2xl shadow-lg relative">
+        <div className="w-full mx-auto bg-white/90 relative">
+
             {/* header */}
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-black">Add Product</h2>
-                <button
-                    type="submit"
-                    form="product-form"
-                    className="py-3 px-8 rounded-full bg-orange-500 text-white font-semibold text-lg hover:bg-orange-600 transition"
-                >
-                    Save Product
-                </button>
+            <div className="max-w-[90rem] mx-auto top-0 z-50 px-4 pt-4">
+                <div className="p-5 bg-white/80 backdrop-blur border border-gray-200 rounded-2xl shadow-lg mb-5">
+
+                    <div className="flex items-center justify-between">
+                        {/* Title */}
+                        <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
+                            Fill Product Details
+                        </h2>
+                    </div>
+
+                </div>
             </div>
 
             {showToast && toastMessage && (
                 <div className={`fixed top-6 right-6 z-[9999] px-6 py-4 rounded shadow-lg font-semibold transition-all
-                    ${toastType === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        ${toastType === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                     {toastMessage}
                 </div>
             )}
@@ -305,7 +308,7 @@ function VariantProductForm() {
             <form
                 id="product-form"
                 onSubmit={handleSubmit(onSubmit)}
-                className="space-y-10"
+                className="max-w-[90rem] mx-auto px-4 pb-4"
             >
                 <div className="flex flex-col gap-8">
                     <div className="border border-gray-300 rounded-xl p-6 bg-white flex flex-col gap-6 shadow-sm">
@@ -374,7 +377,7 @@ function VariantProductForm() {
                                 {fields.map((field, index) => (
                                     <div
                                         key={field.id}
-                                        className="flex flex-col sm:flex-row gap-2 p-3 rounded-xl border border-gray-200 shadow-sm bg-white items-start"
+                                        className="flex flex-col sm:flex-row gap-2 rounded-xl bg-white items-start"
                                     >
                                         <span className="flex-1 w-full">
                                             <input
@@ -411,8 +414,13 @@ function VariantProductForm() {
                             <button
                                 type="button"
                                 onClick={() => append({ key: "", value: "" })}
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition w-full sm:w-auto mt-2"
-                            >
+                                className="
+                                flex items-center gap-2 px-4 py-2 mt-2
+                                bg-gradient-to-r from-orange-400 to-yellow-400
+                                hover:from-orange-500 hover:to-yellow-500
+                                rounded-xl shadow-md text-white font-semibold
+                                hover:shadow-lg transition-all duration-200
+                            "                            >
                                 + Add detail
                             </button>
                         </div>
@@ -425,7 +433,7 @@ function VariantProductForm() {
                                 {featureFields.map((field, index) => (
                                     <div
                                         key={field.id}
-                                        className="flex flex-col sm:flex-row gap-2 mb-2 p-3 rounded-xl border border-gray-200 shadow-sm bg-white items-start"
+                                        className="flex flex-col sm:flex-row gap-2 rounded-xl bg-white items-start"
                                     >
                                         <span className="flex-1 w-full">
                                             <input
@@ -453,88 +461,150 @@ function VariantProductForm() {
                             <button
                                 type="button"
                                 onClick={() => featureAppend({ value: "" })}
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition w-full sm:w-auto mt-2"
-                            >
+                                className="
+                                flex items-center gap-2 px-4 py-2 mt-2
+                                bg-gradient-to-r from-orange-400 to-yellow-400
+                                hover:from-orange-500 hover:to-yellow-500
+                                rounded-xl shadow-md text-white font-semibold
+                                hover:shadow-lg transition-all duration-200
+                            "                               >
                                 + Add Feature
                             </button>
                         </div>
                         {/* Images */}
                         {!variantHasImages && (
                             <>
-                                {/* Primary Image with Cropper */}
-                                <div>
-                                    <label className="block text-base font-semibold text-black mb-1">Primary Image *</label>
-                                    <ImageCropperModal
-                                        onSelect={(img: any) => {
-                                            setValue("image_url", img);
-                                            setPreview(img);
-                                        }}
-                                        buttonLabel="Select Primary Image"
-                                    />
-                                    {preview && (
-                                        <img src={`${uploadUrl}${preview}`} alt="Primary" className="mt-2 h-24 w-24 rounded object-cover border" />
-                                    )}
-                                    <p className="text-sm text-red-500">{errors.image_url?.message as any}</p>
-                                </div>
-                                {/* Multiple Images with Cropper */}
-                                <div>
-                                    <label className="block text-base font-semibold text-black mb-1">Additional Images</label>
-                                    <ImageCropperModal
-                                        multiple
-                                        onSelect={(imgs: any) => {
-                                            const normalized = Array.isArray(imgs) ? imgs : imgs ? [imgs] : [];
-                                            setValue("imageJson", normalized);
-                                            setMultiPreview(normalized);
-                                        }}
-                                        buttonLabel="Select Additional Images"
-                                    />
+                                {/* Product Images */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                                    <div className="flex gap-2 mt-2 flex-nowrap overflow-x-auto">
-                                        {Array.isArray(multiPreview) &&
-                                            multiPreview.map((src, i) => (
-                                                <img
-                                                    key={i}
-                                                    src={`${uploadUrl}${src}`}
-                                                    alt={`Preview ${i}`}
-                                                    className="h-20 w-20 rounded object-cover border"
-                                                />
-                                            ))}
+                                    {/* ================= LEFT: Primary Image ================= */}
+                                    <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
+                                        <label className="block text-lg font-semibold text-black mb-4">
+                                            Primary Image
+                                            <span className="text-red-600 ml-1">*</span>
+                                        </label>
+
+                                        <ImageCropperModal
+                                            className="flex items-center gap-2 px-4 py-2 mt-2
+                        bg-gradient-to-r from-orange-400 to-yellow-400
+                        hover:from-orange-500 hover:to-yellow-500
+                        rounded-xl shadow-md text-white font-semibold
+                        hover:shadow-lg transition-all duration-200"
+                                            onSelect={(img: any) => {
+                                                setValue("image_url", img);
+                                                setPreview(img);
+                                            }}
+                                            buttonLabel="Select Primary Image"
+                                        />
+
+                                        {preview && (
+                                            <img
+                                                src={`${uploadUrl}${preview}`}
+                                                alt="Primary"
+                                                className="mt-4 h-28 w-28 rounded-xl object-cover border shadow-sm"
+                                            />
+                                        )}
+
+                                        <p className="text-sm text-red-500 mt-1">
+                                            {errors.image_url?.message as any}
+                                        </p>
                                     </div>
+
+                                    {/* ================= RIGHT: Additional Images ================= */}
+                                    <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
+                                        <label className="block text-lg font-semibold text-black mb-4">
+                                            Additional Images
+                                        </label>
+
+                                        <ImageCropperModal
+                                            multiple
+                                            className="flex items-center gap-2 px-4 py-2 mt-2
+                        bg-gradient-to-r from-orange-400 to-yellow-400
+                        hover:from-orange-500 hover:to-yellow-500
+                        rounded-xl shadow-md text-white font-semibold
+                        hover:shadow-lg transition-all duration-200"
+                                            onSelect={(imgs: any) => {
+                                                const normalized = Array.isArray(imgs) ? imgs : imgs ? [imgs] : [];
+                                                setValue("imageJson", normalized);
+                                                setMultiPreview(normalized);
+                                            }}
+                                            buttonLabel="Select Additional Images"
+                                        />
+
+                                        <div className="flex gap-3 mt-4 overflow-x-auto">
+                                            {Array.isArray(multiPreview) &&
+                                                multiPreview.map((src, i) => (
+                                                    <img
+                                                        key={i}
+                                                        src={`${uploadUrl}${src}`}
+                                                        alt={`Preview ${i}`}
+                                                        className="h-20 w-20 rounded-xl object-cover border shadow-sm"
+                                                    />
+                                                ))}
+                                        </div>
+                                    </div>
+
                                 </div>
+
                             </>
                         )}
-                        {/* Status */}
-                        <div className="flex items-center gap-2">
-                            <input type="checkbox" {...register("status")} defaultChecked />
-                            <span className="text-base text-black font-semibold">Active</span>
-                        </div>
+                        {/* Status Toggle */}
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <span className="block text-base font-semibold text-black mb-2">
+                                Status                            </span>
+                            <div
+                                className={`flex items-center h-6 w-12 rounded-full transition-all duration-300 ${watch("status") ? "bg-amber-500" : "bg-zinc-600"
+                                    }`}
+                            >
+                                <input type="checkbox" {...register("status")} defaultChecked hidden />
+                                <div
+                                    className={`h-6 w-6 rounded-full bg-white shadow-md transform transition-all duration-300 ${watch("status") ? "translate-x-6" : "translate-x-0"
+                                        }`}
+                                ></div>
+                            </div>
+                        </label>
                     </div>
                     {/* Variants Section */}
                     <div className="border border-gray-300 rounded-xl p-6 bg-white shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-2xl font-semibold text-black">Variants</h2>
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    appendVariant({
-                                        title: "",
-                                        attributeValue: "",
-                                        sku: "",
-                                        mrp: 0,
-                                        bp: 0,
-                                        sp: 0,
-                                        stock: 0,
-                                        status: true,
-                                        imageUrl: "",
-                                        imageJson: [],
-                                        has_images: variantHasImages,
-                                    })
-                                }
 
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition w-full sm:w-auto ml-4"
-                            >
-                                + Add Variant
-                            </button>
+                        <div className="p-3 bg-white/70 backdrop-blur border border-gray-200 rounded-2xl shadow-lg mb-5">
+                            <div className="flex items-center justify-between">
+
+                                {/* Title */}
+                                <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
+                                    Product Variant Details
+                                </h2>
+
+                                {/* Buttons */}
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            appendVariant({
+                                                title: "",
+                                                attributeValue: "",
+                                                sku: "",
+                                                mrp: 0,
+                                                bp: 0,
+                                                sp: 0,
+                                                stock: 0,
+                                                status: true,
+                                                imageUrl: "",
+                                                imageJson: [],
+                                                has_images: variantHasImages,
+                                            })
+                                        }
+
+                                        className="
+                                flex items-center gap-2 px-4 py-2
+                                bg-gradient-to-r from-orange-400 to-yellow-400
+                                hover:from-orange-500 hover:to-yellow-500
+                                rounded-xl shadow-md text-white font-semibold
+                                hover:shadow-lg transition-all duration-200">
+                                        + Add Variant
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {variantFields.map((variant, variantIndex) => {
@@ -729,15 +799,22 @@ function VariantProductForm() {
                                             </>
                                         )}
 
-                                        {/* Status */}
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                {...register(`variants.${variantIndex}.status` as const)}
-                                                defaultChecked
-                                            />
-                                            <span className="text-base text-black font-semibold">Active</span>
-                                        </div>
+                                        {/* Status Toggle */}
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <span className="block text-base font-semibold text-black mb-2">
+                                                Status                            </span>
+                                            <div
+                                                className={`flex items-center h-6 w-12 rounded-full transition-all duration-300 ${watch("status") ? "bg-amber-500" : "bg-zinc-600"
+                                                    }`}
+                                            >
+                                                <input type="checkbox" {...register(`variants.${variantIndex}.status` as const)}
+                                                    defaultChecked hidden />
+                                                <div
+                                                    className={`h-6 w-6 rounded-full bg-white shadow-md transform transition-all duration-300 ${watch("status") ? "translate-x-6" : "translate-x-0"
+                                                        }`}
+                                                ></div>
+                                            </div>
+                                        </label>
                                     </div>
                                 );
                             })}
@@ -747,7 +824,36 @@ function VariantProductForm() {
                         </p>
                     </div>
                 </div>
+
+                {/* Button */}
+                <div className="border border-gray-300 rounded-xl mt-6 shadow-[0_-6px_20px_rgba(0,0,0,0.08)] ">
+                    <div className="max-w-[90rem] mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+
+                        {/* Message */}
+                        <p className="text-sm text-gray-600 font-medium">
+                            ⚠️ Please check all product details before submitting.
+                        </p>
+
+                        {/* Save Button */}
+                        <button
+                            form="product-form"
+                            type="submit"
+                            className="
+                                flex items-center gap-2 px-6 py-3
+                                bg-gradient-to-r from-orange-400 to-yellow-400
+                                hover:from-orange-500 hover:to-yellow-500
+                                rounded-xl shadow-md text-white font-semibold
+                                hover:shadow-lg transition-all duration-200
+                            "
+                        >
+                            Save Product
+                        </button>
+
+                    </div>
+                </div>
+
             </form>
+
         </div>
     );
 }

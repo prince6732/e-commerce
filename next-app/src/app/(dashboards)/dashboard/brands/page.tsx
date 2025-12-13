@@ -594,7 +594,7 @@ function AdminBrandManagement() {
                         <label className="flex items-center gap-3 cursor-pointer">
                             <span className="text-sm font-medium text-gray-900">Status</span>
                             <div
-                                className={`flex items-center h-6 w-12 rounded-full transition-all duration-300 ${watch("status") ? "bg-green-500" : "bg-zinc-600"
+                                className={`flex items-center h-6 w-12 rounded-full transition-all duration-300 ${watch("status") ? "bg-amber-500" : "bg-zinc-600"
                                     }`}
                             >
                                 <input type="checkbox" {...register("status")} hidden />
