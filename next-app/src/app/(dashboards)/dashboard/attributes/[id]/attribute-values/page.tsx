@@ -8,7 +8,7 @@ import Modal from "@/components/(sheared)/Modal";
 import ErrorMessage from "@/components/(sheared)/ErrorMessage";
 import SuccessMessage from "@/components/(sheared)/SuccessMessage";
 import { useLoader } from "@/context/LoaderContext";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { Pencil, Trash2 } from "lucide-react";
 import ProtectedRoute from "@/components/(sheared)/ProtectedRoute";
@@ -19,6 +19,7 @@ import {
     updateAttributeValue
 } from "../../../../../../../utils/attributeValue";
 import { AttributeValue } from "@/common/interface";
+import { FaArrowLeft } from "react-icons/fa";
 
 const schema = yup.object({
     value: yup.string().required("Value is required").max(100),
@@ -48,6 +49,7 @@ export default function AttributeValuesManagement() {
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const params = useParams();
     const attributeId = Number(params.id);
+    const router = useRouter();
 
     const {
         register,
@@ -172,17 +174,45 @@ export default function AttributeValuesManagement() {
                 {errorMessage && <ErrorMessage message={errorMessage} onClose={() => setErrorMessage(null)} />}
                 {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
 
-                <div className="p-2 bg-white/5 border border-gc-300/30 rounded-3xl shadow flex items-center justify-between mb-3">
-                    <h2 className="lg:text-2xl text-lg px-5 font-semibold text-gray-700">
-                        {attributeName ? `${attributeName} | Values` : "Attribute Values"}
-                    </h2>
-                    <button
-                        className="flex items-center px-10 py-3 bg-orange-400 hover:bg-orange-500 rounded-full font-semibold text-white transition"
-                        onClick={() => openModal(null)}
-                    >
-                        + Create Value
-                    </button>
+                <div className="p-5 bg-white/70 backdrop-blur border border-gray-200 rounded-2xl shadow-lg mb-5">
+                    <div className="flex items-center justify-between">
+
+                        {/* Title */}
+                        <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
+                            {attributeName ? `${attributeName} | Values` : "Attribute Values"}
+                        </h2>
+
+                        {/* Buttons */}
+                        <div className="flex gap-3">
+
+                            {/* Back Button */}
+                            <button
+                                type="button"
+                                onClick={() => router.back()}
+                                className="flex items-center gap-2 px-4 py-2 
+                bg-gray-100 hover:bg-gray-200 
+                text-gray-700 rounded-xl shadow-sm 
+                hover:shadow-md transition-all duration-200"
+                            >
+                                <FaArrowLeft className="text-lg" />
+                                <span className="font-medium">Back</span>
+                            </button>
+
+                            {/* Create Value Button */}
+                            <button
+                                onClick={() => openModal(null)}
+                                className="flex items-center gap-2 px-6 py-3 
+                bg-gradient-to-r from-orange-400 to-yellow-400 
+                hover:from-orange-500 hover:to-yellow-500 
+                rounded-xl shadow-md text-white font-semibold 
+                hover:shadow-lg transition-all duration-200"
+                            >
+                                + Create Value
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
 
                 <div className="overflow-x-auto scrollbar rounded-2xl shadow border border-gc-300/30 bg-transparent">
                     <table className="w-full min-w-[600px] text-sm text-left">

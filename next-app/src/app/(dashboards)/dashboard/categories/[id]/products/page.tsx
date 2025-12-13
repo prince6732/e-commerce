@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import { getCategoryById } from "../../../../../../../utils/category";
 import { getSubcategoryProducts } from "../../../../../../../utils/product";
+import { TiInfoLargeOutline } from "react-icons/ti";
 
 const basePath: string =
     `${process.env.NEXT_PUBLIC_UPLOAD_BASE}` || "https://api.zelton.co.in";
@@ -79,126 +80,139 @@ export default function Products() {
 
     return (
         <div>
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-lg mb-4">
-                <div className="flex justify-between items-center px-6 py-5">
-                    <h3 className="text-xl font-semibold text-gray-800">
-                        {category?.name} - Products
-                    </h3>
-                    <div className="flex gap-3">
-                        <button
-                            type="button"
-                            onClick={() => router.back()}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full shadow transition"
-                        >
-                            <FaArrowLeft className="w-5 h-5" />
-                            Back
-                        </button>
-                        <button
-                            onClick={addProduct}
-                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-full shadow transition"
-                        >
-                            <FaPlus className="w-5 h-5" />
-                            Add Product
-                        </button>
+            <div>
+
+                <div className="p-5 bg-white/70 backdrop-blur border border-gray-200 rounded-2xl shadow-lg mb-5">
+                    <div className="flex items-center justify-between">
+
+                        {/* Title */}
+                        <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
+                            {category?.name} - Products
+                        </h2>
+
+                        {/* Buttons */}
+                        <div className="flex gap-3">
+
+                            {/* Back Button */}
+                            <button
+                                type="button"
+                                onClick={() => router.back()}
+                                className="flex items-center gap-2 px-4 py-2 
+                bg-gray-100 hover:bg-gray-200 
+                text-gray-700 rounded-xl shadow-sm 
+                hover:shadow-md transition-all duration-200"
+                            >
+                                <FaArrowLeft className="text-lg" />
+                                <span className="font-medium">Back</span>
+                            </button>
+
+                            {/* Create Value Button */}
+                            <button
+                                onClick={addProduct}
+                                className="flex items-center gap-2 px-6 py-3 
+                bg-gradient-to-r from-orange-400 to-yellow-400 
+                hover:from-orange-500 hover:to-yellow-500 
+                rounded-xl shadow-md text-white font-semibold 
+                hover:shadow-lg transition-all duration-200"
+                            >
+                                + Add Products
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <div className="p-4 border-t border-gray-100 sm:p-6">
-                    <div className="overflow-x-auto rounded-2xl shadow-lg border border-gray-200 bg-white">
-                        <table className="w-full min-w-[700px] text-sm text-left">
-                            <thead className="bg-gradient-to-r from-blue-50 to-white sticky top-0 z-10 shadow-sm">
+                    <div className="overflow-x-auto scrollbar rounded-2xl shadow border border-gray-300/30 bg-transparent">
+                        <table className="w-full min-w-[800px] text-sm text-left">
+
+                            {/* Table Header */}
+                            <thead className="uppercase text-xs font-semibold text-gray-700 bg-white/40 backdrop-blur">
                                 <tr>
-                                    <th className="px-6 py-5 font-bold text-gray-700 uppercase tracking-wide">
-                                        S.No.
-                                    </th>
-                                    <th className="px-6 py-5 font-bold text-gray-700 uppercase tracking-wide rounded-tl-2xl">
-                                        Image
-                                    </th>
-                                    <th className="px-6 py-5 font-bold text-gray-700 uppercase tracking-wide">
-                                        Name
-                                    </th>
-                                    <th className="px-6 py-5 font-bold text-gray-700 uppercase tracking-wide">
-                                        Item Code
-                                    </th>
-                                    <th className="px-6 py-5 font-bold text-gray-700 uppercase tracking-wide">
-                                        Description
-                                    </th>
-                                    <th className="px-6 py-5 font-bold text-gray-700 uppercase tracking-wide">
-                                        Actions
-                                    </th>
-                                    <th className="px-6 py-5 font-bold text-gray-700 uppercase tracking-wide rounded-tr-2xl">
-                                        Status
-                                    </th>
+                                    <th className="px-6 py-4">S.No.</th>
+                                    <th className="px-6 py-4">Image</th>
+                                    <th className="px-6 py-4">Name</th>
+                                    <th className="px-6 py-4">Item Code</th>
+                                    <th className="px-6 py-4">Description</th>
+                                    <th className="px-6 py-4">Actions</th>
+                                    <th className="px-6 py-4">Status</th>
                                 </tr>
                             </thead>
 
-                            <tbody className="divide-y divide-gray-100 text-gray-800">
+                            {/* Table Body */}
+                            <tbody className="divide-y divide-gray-300/30 text-gray-700">
                                 {products.length ? (
                                     products.map((product, index) => (
-                                        <React.Fragment key={product.id}>
-                                            {/* Product Row */}
-                                            <tr
-                                                className="bg-white hover:bg-blue-50 transition-all duration-200"
-                                                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}
-                                            >
-                                                <td className="px-6 py-5">{index + 1}</td>
-                                                <td className="px-6 py-5 rounded-l-2xl">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-12 h-12 overflow-hidden border border-gray-200 shadow">
-                                                            <img
-                                                                width={48}
-                                                                height={48}
-                                                                src={
-                                                                    product.image_url
-                                                                        ? `${basePath}${product.image_url}`
-                                                                        : "/placeholder.svg"
-                                                                }
-                                                                alt={product.name}
-                                                                className="object-cover w-full h-full"
-                                                            />
-                                                        </div>
+                                        <tr
+                                            key={product.id}
+                                            className="bg-white/5 hover:bg-white/10 transition"
+                                        >
+                                            <td className="px-6 py-4">{index + 1}</td>
+
+                                            {/* Image */}
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center">
+                                                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-300/40 shadow-sm">
+                                                        <img
+                                                            src={
+                                                                product.image_url
+                                                                    ? `${basePath}${product.image_url}`
+                                                                    : "/placeholder.svg"
+                                                            }
+                                                            className="object-cover w-full h-full"
+                                                            alt={product.name}
+                                                        />
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-5 font-medium">
-                                                    {product.name}
-                                                </td>
-                                                <td className="px-6 py-5">{product.item_code}</td>
-                                                <td className="px-6 py-5">
-                                                    <button
-                                                        className="px-4 py-2 text-xs rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold shadow transition"
-                                                        onClick={() => openDescriptionModal(product)}
-                                                    >
-                                                        View Description
-                                                    </button>
-                                                </td>
-                                                <td className="px-6 py-5 flex gap-2 items-center">
-                                                    <button
-                                                        className="px-4 py-2 text-xs rounded-full bg-green-100 text-green-700 hover:bg-green-200 font-semibold shadow transition"
-                                                        onClick={() => goToProductDetail(product)}
-                                                    >
-                                                        Product Detail
-                                                    </button>
-                                                </td>
-                                                <td className="px-6 py-5 rounded-r-2xl">
-                                                    <span
-                                                        className={`inline-block rounded-full px-4 py-1 font-semibold text-xs ${product.status
-                                                            ? "bg-green-100 text-green-700"
-                                                            : "bg-red-100 text-red-700"
-                                                            }`}
-                                                    >
-                                                        {product.status ? "Active" : "Inactive"}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        </React.Fragment>
+                                                </div>
+                                            </td>
+
+                                            {/* Name */}
+                                            <td className="px-6 py-4 font-medium">{product.name}</td>
+
+                                            {/* Item Code */}
+                                            <td className="px-6 py-4">{product.item_code}</td>
+
+                                            {/* Description Button */}
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    className="px-3 py-2 text-xs rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold transition"
+                                                    onClick={() => openDescriptionModal(product)}
+                                                >
+                                                    View Description
+                                                </button>
+                                            </td>
+
+                                            {/* Status */}
+                                            <td className="px-6 py-4">
+                                                <span
+                                                    className={`px-3 py-2 rounded-md text-xs font-medium ${product.status
+                                                        ? "bg-green-100 text-green-700"
+                                                        : "bg-red-100 text-red-700"
+                                                        }`}
+                                                >
+                                                    {product.status ? "Active" : "Inactive"}
+                                                </span>
+                                            </td>
+
+                                            {/* Actions */}
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    title="View Product Details"
+                                                    onClick={() => goToProductDetail(product)}
+                                                    className="size-10 bg-gc-300/30 hover:bg-orange-400 flex justify-center items-center rounded-full"
+                                                >
+                                                    <TiInfoLargeOutline className="h-4 w-4" />
+                                                </button>
+                                            </td>
+
+                                        </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td
                                             colSpan={7}
-                                            className="text-center text-gray-400 py-10 italic rounded-b-2xl"
+                                            className="text-center text-zinc-400 py-8 italic"
                                         >
-                                            No products found.
+                                            No Products Found
                                         </td>
                                     </tr>
                                 )}
@@ -206,6 +220,7 @@ export default function Products() {
                         </table>
                     </div>
                 </div>
+
             </div>
 
             {/* Description Modal */}

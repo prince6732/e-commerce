@@ -116,37 +116,70 @@ function Users() {
             )}
 
             <div>
-                <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-md mb-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="lg:text-2xl text-lg px-5 font-semibold text-gray-800 tracking-tight">
-                            User Management ({totalUsers} Users)
+                <div className="p-5 bg-white/70 backdrop-blur border border-gray-200 rounded-2xl shadow-lg mb-5">
+
+                    {/* Header */}
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+                        {/* Title */}
+                        <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
+                            User Management
+                            <span className="ml-2 text-sm font-medium text-gray-500">
+                                ({totalUsers} Users)
+                            </span>
                         </h2>
-                        <button
-                            type="button"
-                            onClick={() => router.back()}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full shadow transition"
-                        >
-                            <FaArrowLeft className="text-lg" />
-                            <span className="font-medium">Back</span>
-                        </button>
+
+                        {/* Actions */}
+                        <div className="flex gap-3">
+
+                            {/* Back Button */}
+                            <button
+                                type="button"
+                                onClick={() => router.back()}
+                                className="
+          flex items-center gap-2 px-5 py-3
+          bg-gray-100 hover:bg-gray-200
+          text-gray-700 rounded-xl
+          shadow-sm hover:shadow-md
+          transition-all duration-200
+        "
+                            >
+                                <FaArrowLeft className="text-lg" />
+                                <span className="font-semibold">Back</span>
+                            </button>
+
+                        </div>
                     </div>
 
                     {/* Filters */}
-                    <div className="flex flex-wrap gap-3 px-5">
+                    <div className="mt-6 flex flex-col lg:flex-row gap-4 px-5">
+
                         {/* Search */}
-                        <div className="flex-1 min-w-[250px]">
+                        <div className="flex-1 min-w-[260px]">
                             <div className="flex gap-2">
                                 <input
                                     type="search"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                                     placeholder="Search by name, email, phone..."
-                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="
+            flex-1 px-4 py-3 rounded-xl
+            border border-gray-300
+            focus:outline-none focus:ring-2 focus:ring-orange-400
+            transition
+          "
                                 />
                                 <button
                                     onClick={handleSearch}
-                                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition flex items-center gap-2"
+                                    className="
+            px-5 py-3 flex items-center gap-2
+            bg-gradient-to-r from-orange-400 to-yellow-400
+            hover:from-orange-500 hover:to-yellow-500
+            text-white font-semibold
+            rounded-xl shadow-md hover:shadow-lg
+            transition-all duration-200
+          "
                                 >
                                     <FaSearch />
                                     Search
@@ -157,15 +190,25 @@ function Users() {
                         {/* Status Filter */}
                         <select
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'blocked')}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onChange={(e) =>
+                                setStatusFilter(e.target.value as "all" | "active" | "blocked")
+                            }
+                            className="
+        px-5 py-3 rounded-xl
+        border border-gray-300
+        bg-white
+        focus:outline-none focus:ring-2 focus:ring-orange-400
+        transition
+      "
                         >
                             <option value="all">All Users</option>
                             <option value="active">Active Users</option>
                             <option value="blocked">Blocked Users</option>
                         </select>
+
                     </div>
                 </div>
+
 
                 <div className="overflow-x-auto rounded-2xl shadow-lg border border-gray-200 bg-white">
                     <table className="w-full min-w-[700px] text-sm text-left">

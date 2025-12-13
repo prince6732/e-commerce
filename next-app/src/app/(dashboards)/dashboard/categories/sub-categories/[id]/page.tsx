@@ -18,6 +18,7 @@ import { createSubcategory, deleteSubcategory, getSubcategories, updateSubcatego
 import { fetchAttributes } from "../../../../../../../utils/attribute";
 import ImageCropperModal from "@/components/(frontend)/ImageCropperModal";
 import { Attribute, Subcategory } from "@/common/interface";
+import { FaArrowLeft } from "react-icons/fa";
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
 const SUPPORTED_FORMATS = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif"];
@@ -233,13 +234,43 @@ export default function SubcategoriesManagement() {
         {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
 
         {/* Header */}
-        <div className="p-2 bg-white/5 border border-gc-300/30 rounded-3xl shadow flex items-center justify-between mb-3">
-          <h2 className="lg:text-2xl text-lg px-5 font-semibold text-gray-700 tracking-tight">
-            {parentCategory ? `${parentCategory} | Subcategories` : "Subcategories"}
-          </h2>
-          <button className="flex items-center px-10 py-3 bg-orange-400 hover:bg-orange-500 rounded-full font-semibold text-white transition" onClick={() => openModal(null)}>
-            + Create Subcategory
-          </button>
+        <div className="p-5 bg-white/70 backdrop-blur border border-gray-200 rounded-2xl shadow-lg mb-5">
+          <div className="flex items-center justify-between">
+
+            {/* Title */}
+            <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
+              {parentCategory ? `${parentCategory} | Subcategories` : "Subcategories"}
+            </h2>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+
+              {/* Back Button */}
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="flex items-center gap-2 px-4 py-2 
+                bg-gray-100 hover:bg-gray-200 
+                text-gray-700 rounded-xl shadow-sm 
+                hover:shadow-md transition-all duration-200"
+              >
+                <FaArrowLeft className="text-lg" />
+                <span className="font-medium">Back</span>
+              </button>
+
+              {/* Create Value Button */}
+              <button
+                onClick={() => openModal(null)}
+                className="flex items-center gap-2 px-6 py-3 
+                bg-gradient-to-r from-orange-400 to-yellow-400 
+                hover:from-orange-500 hover:to-yellow-500 
+                rounded-xl shadow-md text-white font-semibold 
+                hover:shadow-lg transition-all duration-200"
+              >
+                + Create Subcategory
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Table */}

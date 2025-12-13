@@ -190,27 +190,32 @@ function AdminBrandManagement() {
             {successMessage && <SuccessMessage message={successMessage} onClose={() => setSuccessMessage(null)} />}
 
             <div>
-                <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-md mb-4">
+                <div className="p-5 bg-white/70 backdrop-blur border border-gray-200 rounded-2xl shadow-lg mb-5">
                     <div className="flex items-center justify-between">
-                        <h2 className="lg:text-2xl text-lg px-5 font-semibold text-gray-800 tracking-tight">Brands</h2>
-                        <div className="flex gap-3 justify-end">
+
+                        {/* Title */}
+                        <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
+                            Brands
+                        </h2>
+
+                        {/* Buttons */}
+                        <div className="flex gap-3">
+
+                            {/* Create Brand Button */}
                             <button
-                                type="button"
-                                onClick={() => router.back()}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full shadow transition"
-                            >
-                                <FaArrowLeft className="text-lg" />
-                                <span className="font-medium">Back</span>
-                            </button>
-                            <button
-                                className="flex items-center px-8 py-2 bg-orange-100 hover:bg-orange-200 rounded-full font-semibold text-orange-700 transition"
                                 onClick={() => openModal(null)}
+                                className="flex items-center gap-2 px-5 py-3 
+                bg-gradient-to-r from-orange-400 to-yellow-400 
+                hover:from-orange-500 hover:to-yellow-500 
+                rounded-xl shadow-md text-white font-semibold
+                hover:shadow-lg transition-all duration-200"
                             >
                                 + Create Brand
                             </button>
                         </div>
                     </div>
                 </div>
+
 
                 <div className="overflow-x-auto rounded-2xl shadow-lg border border-gray-200 bg-white">
                     <table className="w-full min-w-[700px] text-sm text-left">

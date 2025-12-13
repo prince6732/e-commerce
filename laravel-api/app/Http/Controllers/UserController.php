@@ -15,16 +15,21 @@ class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $perPage = $request->get('per_page', 15);
-            $search = $request->get('search');
-            $status = $request->get('status'); // 'active', 'blocked', 'all'
-            $sortBy = $request->get('sort_by', 'created_at');
+            $perPage   = $request->get('per_page', 15);
+            $search    = $request->get('search');
+            $status    = $request->get('status'); // 'active', 'blocked', 'all'
+            $sortBy    = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
 
             $query = User::with('roles')
-                ->withCount(['orders', 'reviews', 'likes']);
+                ->withCount(['orders', 'reviews', 'likes'])
 
-            // Search filter
+                // 🚫 Exclude Admin users
+                ->whereDoesntHave('roles', function ($q) {
+                    $q->where('name', 'Admin');
+                });
+
+            // 🔍 Search filter
             if ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -33,31 +38,32 @@ class UserController extends Controller
                 });
             }
 
-            // Status filter
+            // 📌 Status filter
             if ($status === 'active') {
                 $query->where('status', true);
             } elseif ($status === 'blocked') {
                 $query->where('status', false);
             }
 
-            // Sorting
+            // ↕ Sorting
             $query->orderBy($sortBy, $sortOrder);
 
             $users = $query->paginate($perPage);
 
             return response()->json([
-                'res' => 'success',
-                'users' => $users,
-                'message' => 'Users fetched successfully'
+                'res'     => 'success',
+                'users'   => $users,
+                'message' => 'Users fetched successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'res' => 'error',
+                'res'     => 'error',
                 'message' => 'Failed to fetch users',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
+
 
     /**
      * Get detailed user information by ID (for admin dashboard detail view)
