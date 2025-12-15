@@ -4,6 +4,7 @@ import { Control, FieldErrors, useFieldArray, UseFormSetValue, UseFormWatch } fr
 import { FaTimes } from "react-icons/fa";
 import ImageCropperModal from "../(frontend)/ImageCropperModal";
 import { FormData1 } from "@/app/(dashboards)/dashboard/categories/[id]/products/add-multi-variant/page";
+import { X } from "lucide-react";
 
 type Props = {
     itemIndex: number;
@@ -56,117 +57,226 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
                             key={option.id}
                             className="p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm flex flex-col gap-4 relative"
                         >
+                            <button
+                                type="button"
+                                onClick={() => remove(optionIndex)}
+                                title="Remove Option"
+                                className="absolute top-[-6] right-[-8] flex items-center justify-center h-9 w-9 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 shadow-sm hover:shadow-md transition-all duration-200">
+                                <X size={20} className="text-red-600 font-bold hover:text-white"></X>
+                            </button>
+
                             {/* Header row */}
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex-1">
-                                    <label className="block text-base font-semibold text-black mb-1">Name *</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start">
+
+                                {/* Name */}
+                                <div className="space-y-1.5">
+                                    <label className="flex items-center text-sm font-semibold text-gray-800">
+                                        Name
+                                        <span className="text-xs text-gray-400 ms-1">(Optional)</span>
+                                    </label>
+
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.title`)}
                                         type="text"
                                         placeholder="Enter product name"
-                                        className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                                        className="
+                w-full
+                rounded-xl
+                border border-gray-300
+                bg-white
+                px-3 py-3
+                text-sm text-gray-900
+                placeholder:text-gray-400
+                focus:border-orange-500
+                focus:ring-2 focus:ring-orange-100
+                transition-all duration-200
+            "
                                     />
-                                    <p className="text-sm text-red-500">{errors.variants?.[itemIndex]?.options?.[optionIndex]?.title?.message}</p>
+
+                                    {errors.variants?.[itemIndex]?.options?.[optionIndex]?.title && (
+                                        <p className="text-xs text-red-500">
+                                            {errors.variants[itemIndex].options[optionIndex].title?.message}
+                                        </p>
+                                    )}
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => remove(optionIndex)}
-                                    className="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition flex items-center justify-center"
-                                    title="Remove"
-                                >
-                                    <FaTimes className="w-4 h-4" />
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                                 {/* Attribute Value */}
-                                <div>
-                                    <label className="block text-base font-semibold text-black mb-1">
-                                        {attribute.name} *
+                                <div className="space-y-1.5">
+                                    <label className="flex items-center gap-1 text-sm font-semibold text-gray-800">
+                                        {attribute.name}
+                                        <span className="text-red-500">*</span>
                                     </label>
+
                                     <select
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.attributeValue`)}
-                                        className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                                        className="
+                w-full
+                rounded-xl
+                border border-gray-300
+                bg-white
+                px-3 py-3
+                text-sm text-gray-900
+                focus:border-orange-500
+                focus:ring-2 focus:ring-orange-100
+                transition-all duration-200
+            "
                                     >
-                                        <option value="">-- Select value --</option>
+                                        <option value="">Select value</option>
                                         {attribute.values?.map((value) => (
                                             <option key={value.id} value={value.id}>
                                                 {value.value}
                                             </option>
                                         ))}
                                     </select>
-                                    <p className="text-sm text-red-500">
-                                        {errors.variants?.[itemIndex]?.options?.[optionIndex]?.attributeValue?.message}
-                                    </p>
+
+                                    {errors.variants?.[itemIndex]?.options?.[optionIndex]?.attributeValue && (
+                                        <p className="text-xs text-red-500">
+                                            {errors.variants[itemIndex].options[optionIndex].attributeValue?.message}
+                                        </p>
+                                    )}
                                 </div>
+
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start">
                                 {/* SKU */}
-                                <div>
-                                    <label className="block text-base font-semibold text-black mb-1">
+                                <div className="space-y-1.5">
+                                    <label className="flex items-center gap-1 text-sm font-semibold text-gray-800">
                                         SKU
+                                        <span className="text-red-500">*</span>
                                     </label>
+
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.sku`)}
                                         type="text"
                                         placeholder="Enter SKU"
-                                        className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                                        className="
+                w-full
+                rounded-xl
+                border border-gray-300
+                bg-white
+                px-3 py-3
+                text-sm text-gray-900
+                placeholder:text-gray-400
+                focus:border-orange-500
+                focus:ring-2 focus:ring-orange-100
+                transition-all duration-200
+            "
                                     />
-                                    <p className="text-sm text-red-500">
-                                        {errors.variants?.[itemIndex]?.options?.[optionIndex]?.sku?.message}
-                                    </p>
+
+                                    {errors.variants?.[itemIndex]?.options?.[optionIndex]?.sku && (
+                                        <p className="text-xs text-red-500">
+                                            {errors.variants[itemIndex].options[optionIndex].sku?.message}
+                                        </p>
+                                    )}
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {/* MRP */}
-                                <div>
-                                    <label className="block text-base font-semibold text-black mb-1">
+                                <div className="space-y-1.5">
+                                    <label className="flex items-center gap-1 text-sm font-semibold text-gray-800">
                                         MRP
+                                        <span className="text-red-500">*</span>
                                     </label>
+
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.mrp`)}
                                         type="number"
                                         onWheel={disableScrollNumberInput}
-                                        placeholder="MRP"
-                                        className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                                        placeholder="Enter MRP"
+                                        className="
+                w-full
+                rounded-xl
+                border border-gray-300
+                bg-white
+                px-3 py-3
+                text-sm text-gray-900
+                placeholder:text-gray-400
+                focus:border-orange-500
+                focus:ring-2 focus:ring-orange-100
+                transition-all duration-200
+            "
                                     />
-                                    <p className="text-sm text-red-500">
-                                        {errors.variants?.[itemIndex]?.options?.[optionIndex]?.mrp?.message}
-                                    </p>
+
+                                    {errors.variants?.[itemIndex]?.options?.[optionIndex]?.mrp && (
+                                        <p className="text-xs text-red-500">
+                                            {errors.variants[itemIndex].options[optionIndex].mrp?.message}
+                                        </p>
+                                    )}
                                 </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start">
                                 {/* BP */}
-                                <div>
-                                    <label className="block text-base font-semibold text-black mb-1">
+                                <div className="space-y-1.5">
+                                    <label className="flex items-center gap-1 text-sm font-semibold text-gray-800">
                                         BP
+                                        <span className="text-red-500">*</span>
                                     </label>
+
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.bp`)}
                                         type="number"
                                         onWheel={disableScrollNumberInput}
-                                        placeholder="BP"
-                                        className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                                        placeholder="Enter BP"
+                                        className="
+                w-full
+                rounded-xl
+                border border-gray-300
+                bg-white
+                px-3 py-3
+                text-sm text-gray-900
+                placeholder:text-gray-400
+                focus:border-orange-500
+                focus:ring-2 focus:ring-orange-100
+                transition-all duration-200
+            "
                                     />
-                                    <p className="text-sm text-red-500">
-                                        {errors.variants?.[itemIndex]?.options?.[optionIndex]?.bp?.message}
-                                    </p>
+
+                                    {errors.variants?.[itemIndex]?.options?.[optionIndex]?.bp && (
+                                        <p className="text-xs text-red-500">
+                                            {errors.variants[itemIndex].options[optionIndex].bp?.message}
+                                        </p>
+                                    )}
                                 </div>
                                 {/* SP */}
-                                <div>
-                                    <label className="block text-base font-semibold text-black mb-1">
+                                <div className="space-y-1.5">
+                                    <label className="flex items-center gap-1 text-sm font-semibold text-gray-800">
                                         SP
+                                        <span className="text-red-500">*</span>
                                     </label>
+
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.sp`)}
                                         type="number"
                                         onWheel={disableScrollNumberInput}
-                                        placeholder="SP"
-                                        className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                                        placeholder="Enter SP"
+                                        className="
+                w-full
+                rounded-xl
+                border border-gray-300
+                bg-white
+                px-3 py-3
+                text-sm text-gray-900
+                placeholder:text-gray-400
+                focus:border-orange-500
+                focus:ring-2 focus:ring-orange-100
+                transition-all duration-200
+            "
                                     />
-                                    <p className="text-sm text-red-500">
-                                        {errors.variants?.[itemIndex]?.options?.[optionIndex]?.sp?.message}
-                                    </p>
+
+                                    {errors.variants?.[itemIndex]?.options?.[optionIndex]?.sp && (
+                                        <p className="text-xs text-red-500">
+                                            {errors.variants[itemIndex].options[optionIndex].sp?.message}
+                                        </p>
+                                    )}
                                 </div>
+                            </div>
+
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start">
 
                                 {/* Stock */}
                                 <div>
-                                    <label className="block text-base font-semibold text-black mb-1">Stock*</label>
+                                    <label className="block text-base font-semibold text-black mb-1">Stock<span className="text-red-500">*</span></label>
                                     <input
                                         {...register(`variants.${itemIndex}.options.${optionIndex}.stock` as const)}
                                         type="number"
@@ -177,7 +287,43 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
                                     />
                                     <p className="text-sm text-red-500">{errors.variants?.[itemIndex]?.options?.[optionIndex]?.stock?.message}</p>
                                 </div>
+                                {/* Status */}
+                                <div className="mt-9 ms-4">
+                                    <label className="flex items-center gap-4 cursor-pointer select-none">
+
+                                        {/* Label */}
+                                        <span className="text-sm font-semibold text-gray-800">
+                                            Status
+                                        </span>
+
+                                        {/* Toggle */}
+                                        <div
+                                            className={`relative flex items-center ms-8 h-6 w-12 rounded-full transition-all duration-300
+                                        ${watch(`variants.${itemIndex}.options.${optionIndex}.status`)
+                                                    ? "bg-amber-500"
+                                                    : "bg-zinc-400"
+                                                }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                {...register(`variants.${itemIndex}.options.${optionIndex}.status`)}
+                                                defaultChecked
+                                                className="sr-only"
+                                            />
+
+                                            <span
+                                                className={`absolute h-6 w-6 rounded-full bg-white shadow-md transform transition-all duration-300
+                                                 ${watch(`variants.${itemIndex}.options.${optionIndex}.status`)
+                                                        ? "translate-x-6"
+                                                        : "translate-x-0"
+                                                    }`}
+                                            />
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
+
+
                             {/* Primary Image with Cropper for this option */}
                             {attributeTwoHasImages && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -222,15 +368,7 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
                                     </div>
                                 </div>
                             )}
-                            {/* Status */}
-                            <div className="flex items-center gap-2 mt-2">
-                                <input
-                                    type="checkbox"
-                                    {...register(`variants.${itemIndex}.options.${optionIndex}.status`)}
-                                    defaultChecked
-                                />
-                                <span className="text-base text-black font-semibold">Active</span>
-                            </div>
+
                         </div>
                     );
                 })}
@@ -252,8 +390,12 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
                         hasAttributeImages2: attributeTwoHasImages
                     })
                 }
-                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition self-start"
-            >
+                className="
+                                flex items-center gap-2 px-4 py-2 w-36
+                                bg-gradient-to-r from-orange-400 to-yellow-400
+                                hover:from-orange-500 hover:to-yellow-500
+                                rounded-xl shadow-md text-white font-semibold
+                                hover:shadow-lg transition-all duration-200"            >
                 + Add Option
             </button>
         </div>

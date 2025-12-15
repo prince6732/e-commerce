@@ -332,18 +332,18 @@ const ProductPage = () => {
             .trim();
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-                <div className="container mx-auto px-4 py-16">
-                    <div className="text-center">
-                        <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-gray-600">Loading product details...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // if (loading) {
+    //     return (
+    //         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    //             <div className="container mx-auto px-4 py-16">
+    //                 <div className="text-center">
+    //                     <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
+    //                     <p className="text-gray-600">Loading product details...</p>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     if (!product) {
         return (

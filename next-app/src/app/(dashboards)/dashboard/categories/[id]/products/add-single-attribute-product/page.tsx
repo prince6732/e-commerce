@@ -19,6 +19,7 @@ import { getCategoryByIdForProduct } from "../../../../../../../../utils/categor
 import { fetchBrands } from "../../../../../../../../utils/brand";
 import { createProduct, updateProduct } from "../../../../../../../../utils/product";
 import ImageCropperModal from "@/components/(frontend)/ImageCropperModal";
+import { X } from "lucide-react";
 
 const variant = yup.object({
     has_images: yup.boolean(),
@@ -285,7 +286,7 @@ function VariantProductForm() {
         <div className="w-full mx-auto bg-white/90 relative">
 
             {/* header */}
-            <div className="max-w-[90rem] mx-auto top-0 z-50 px-4 pt-4">
+            <div className="max-w-[80rem] mx-auto top-0 z-50 px-4 pt-4">
                 <div className="p-5 bg-white/80 backdrop-blur border border-gray-200 rounded-2xl shadow-lg mb-5">
 
                     <div className="flex items-center justify-between">
@@ -308,14 +309,14 @@ function VariantProductForm() {
             <form
                 id="product-form"
                 onSubmit={handleSubmit(onSubmit)}
-                className="max-w-[90rem] mx-auto px-4 pb-4"
+                className="max-w-[80rem] mx-auto px-4 pb-4"
             >
                 <div className="flex flex-col gap-8">
                     <div className="border border-gray-300 rounded-xl p-6 bg-white flex flex-col gap-6 shadow-sm">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Name */}
                             <div>
-                                <label className="block text-base font-semibold text-black mb-1">Name *</label>
+                                <label className="block text-base font-semibold text-black mb-1">Name<span className="text-red-600">*</span></label>
                                 <input
                                     {...register("name")}
                                     type="text"
@@ -324,19 +325,10 @@ function VariantProductForm() {
                                 />
                                 <p className="text-sm text-red-500">{errors.name?.message as any}</p>
                             </div>
-                            {/* Item Code */}
-                            <div>
-                                <label className="block text-base font-semibold text-black mb-1">Item Code</label>
-                                <input
-                                    {...register("itemCode")}
-                                    type="text"
-                                    placeholder="Enter item code"
-                                    className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
-                                />
-                            </div>
+
                             {/* Brand */}
                             <div>
-                                <label className="block text-base font-semibold text-black mb-1">Brand</label>
+                                <label className="block text-base font-semibold text-black mb-1">Brand<span className="text-red-600">*</span></label>
                                 <select
                                     {...register("brandId")}
                                     className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
@@ -350,11 +342,22 @@ function VariantProductForm() {
                                 </select>
                                 <p className="text-sm text-red-500">{errors.brandId?.message as any}</p>
                             </div>
+                            {/* Item Code */}
+                            <div>
+                                <label className="block text-base font-semibold text-black mb-1">Item Code</label>
+                                <input
+                                    {...register("itemCode")}
+                                    type="text"
+                                    placeholder="Enter item code"
+                                    className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                                />
+                            </div>
+
                         </div>
                         {/* Description */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700">
-                                Description<span className="text-red-600">*</span>
+                                Description
                             </label>
                             <Controller
                                 name="description"
@@ -480,8 +483,7 @@ function VariantProductForm() {
                                     {/* ================= LEFT: Primary Image ================= */}
                                     <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
                                         <label className="block text-lg font-semibold text-black mb-4">
-                                            Primary Image
-                                            <span className="text-red-600 ml-1">*</span>
+                                            Primary Image<span className="text-red-600">*</span>
                                         </label>
 
                                         <ImageCropperModal
@@ -551,7 +553,7 @@ function VariantProductForm() {
                         {/* Status Toggle */}
                         <label className="flex items-center gap-3 cursor-pointer">
                             <span className="block text-base font-semibold text-black mb-2">
-                                Status                            </span>
+                                Status</span>
                             <div
                                 className={`flex items-center h-6 w-12 rounded-full transition-all duration-300 ${watch("status") ? "bg-amber-500" : "bg-zinc-600"
                                     }`}
@@ -566,10 +568,8 @@ function VariantProductForm() {
                     </div>
                     {/* Variants Section */}
                     <div className="border border-gray-300 rounded-xl p-6 bg-white shadow-sm">
-
                         <div className="p-3 bg-white/70 backdrop-blur border border-gray-200 rounded-2xl shadow-lg mb-5">
                             <div className="flex items-center justify-between">
-
                                 {/* Title */}
                                 <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
                                     Product Variant Details
@@ -620,9 +620,29 @@ function VariantProductForm() {
                                         key={variant.id}
                                         className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm flex flex-col gap-4 relative"
                                     >
-                                        <div className="flex items-center mb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeVariant(variantIndex)}
+                                            title="Remove Variant"
+                                            className="absolute top-[-6] right-[-8]
+                                                flex items-center justify-center
+                                                h-9 w-9
+                                                rounded-xl
+                                                bg-red-50
+                                                text-red-600
+                                                border border-red-200
+                                                hover:bg-red-500 hover:text-white 
+                                                hover:border-red-500
+                                                shadow-sm hover:shadow-md
+                                                transition-all duration-200
+                                            "
+                                        >
+                                            <X size={20} className="text-red-600 font-bold hover:text-white"></X>
+                                        </button>
+
+                                        <div className="flex flex-col sm:flex-row gap-4 items-center">
                                             <div className="flex-1">
-                                                <label className="block text-base font-semibold text-black mb-1">Name *</label>
+                                                <label className="block text-base font-semibold text-black mb-1">Name<span className="text-red-600">*</span></label>
                                                 <input
                                                     {...register(`variants.${variantIndex}.title` as const)}
                                                     type="text"
@@ -633,26 +653,15 @@ function VariantProductForm() {
                                                     {Array.isArray(errors.variants) ? errors.variants[variantIndex]?.title?.message : undefined}
                                                 </p>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeVariant(variantIndex)}
-                                                className="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition flex items-center justify-center"
-                                                title="Remove"
-                                                style={{ alignSelf: "flex-start" }}
-                                            >
-                                                <FaTimes className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                        <div className="flex flex-col sm:flex-row gap-4 items-center">
                                             {/* Attribute Value */}
                                             <div className="flex-1">
                                                 <div>
                                                     <label className="block text-base font-semibold text-black mb-1">
-                                                        {attributes.length > 0 ? attributes[0].name : "Attribute Value"} *
+                                                        {attributes.length > 0 ? attributes[0].name : "Attribute Value"}<span className="text-red-600">*</span>
                                                     </label>
                                                     <select
                                                         {...register(`variants.${variantIndex}.attributeValue` as const)}
-                                                        className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                                                        className="w-full px-3 py-3 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
                                                     >
                                                         <option value="">-- Select value --</option>
                                                         {attributes[0]?.values?.length ? (
@@ -670,10 +679,13 @@ function VariantProductForm() {
                                                     </p>
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row gap-4 items-center">
+
                                             {/* SKU */}
                                             <div className="flex-1">
                                                 <label className="block text-base font-semibold text-black mb-1">
-                                                    SKU
+                                                    SKU<span className="text-red-600">*</span>
                                                 </label>
                                                 <input
                                                     {...register(`variants.${variantIndex}.sku` as const)}
@@ -685,12 +697,10 @@ function VariantProductForm() {
                                                     {Array.isArray(errors.variants) ? errors.variants[variantIndex]?.sku?.message : undefined}
                                                 </p>
                                             </div>
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             {/* MRP */}
-                                            <div>
+                                            <div className="flex-1">
                                                 <label className="block text-base font-semibold text-black mb-1">
-                                                    MRP
+                                                    MRP<span className="text-red-600">*</span>
                                                 </label>
                                                 <input
                                                     {...register(`variants.${variantIndex}.mrp` as const)}
@@ -703,26 +713,13 @@ function VariantProductForm() {
                                                     {Array.isArray(errors.variants) ? errors.variants[variantIndex]?.mrp?.message : undefined}
                                                 </p>
                                             </div>
-                                            {/* BP */}
-                                            <div>
-                                                <label className="block text-base font-semibold text-black mb-1">
-                                                    BP
-                                                </label>
-                                                <input
-                                                    {...register(`variants.${variantIndex}.bp` as const)}
-                                                    type="number"
-                                                    onWheel={disableScrollNumberInput}
-                                                    placeholder="BP"
-                                                    className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
-                                                />
-                                                <p className="text-sm text-red-500">
-                                                    {Array.isArray(errors.variants) ? errors.variants[variantIndex]?.bp?.message : undefined}
-                                                </p>
-                                            </div>
+
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row gap-4 items-center">
                                             {/* SP */}
-                                            <div>
+                                            <div className="flex-1">
                                                 <label className="block text-base font-semibold text-black mb-1">
-                                                    SP
+                                                    SP<span className="text-red-600">*</span>
                                                 </label>
                                                 <input
                                                     {...register(`variants.${variantIndex}.sp` as const)}
@@ -735,9 +732,29 @@ function VariantProductForm() {
                                                     {Array.isArray(errors.variants) ? errors.variants[variantIndex]?.sp?.message : undefined}
                                                 </p>
                                             </div>
+                                            {/* BP */}
+                                            <div className="flex-1">
+                                                <label className="block text-base font-semibold text-black mb-1">
+                                                    BP<span className="text-red-600">*</span>
+                                                </label>
+                                                <input
+                                                    {...register(`variants.${variantIndex}.bp` as const)}
+                                                    type="number"
+                                                    onWheel={disableScrollNumberInput}
+                                                    placeholder="BP"
+                                                    className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                                                />
+                                                <p className="text-sm text-red-500">
+                                                    {Array.isArray(errors.variants) ? errors.variants[variantIndex]?.bp?.message : undefined}
+                                                </p>
+                                            </div>
+
+
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row gap-4 items-center">
                                             {/* Stock */}
-                                            <div>
-                                                <label className="block text-base font-semibold text-black mb-1">Stock*</label>
+                                            <div className="flex-1">
+                                                <label className="block text-base font-semibold text-black mb-1">Stock<span className="text-red-600">*</span></label>
                                                 <input
                                                     {...register(`variants.${variantIndex}.stock` as const)}
                                                     type="number"
@@ -750,6 +767,41 @@ function VariantProductForm() {
                                                     {Array.isArray(errors.variants) ? errors.variants[variantIndex]?.stock?.message : undefined}
                                                 </p>
                                             </div>
+                                            <div className="mt-6">
+                                                <label className="flex items-center gap-4 cursor-pointer select-none">
+
+                                                    {/* Label */}
+                                                    <span className="text-sm font-semibold text-gray-800">
+                                                        Status
+                                                    </span>
+
+                                                    {/* Toggle */}
+                                                    <div
+                                                        className={`relative flex items-center h-6 w-12 rounded-full transition-all duration-300
+                ${watch(`variants.${variantIndex}.status`)
+                                                                ? "bg-amber-500"
+                                                                : "bg-zinc-400"
+                                                            }`}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            {...register(`variants.${variantIndex}.status` as const)}
+                                                            defaultChecked
+                                                            className="sr-only"
+                                                        />
+
+                                                        <span
+                                                            className={`absolute h-6 w-6 rounded-full bg-white shadow-md transform transition-all duration-300
+                                                                ${watch(`variants.${variantIndex}.status`)
+                                                                    ? "translate-x-6"
+                                                                    : "translate-x-0"
+                                                                }`}
+                                                        />
+                                                    </div>
+
+                                                </label>
+                                            </div>
+
                                         </div>
 
                                         {/* Primary Image with Cropper for this variant */}
@@ -798,23 +850,6 @@ function VariantProductForm() {
                                                 </div>
                                             </>
                                         )}
-
-                                        {/* Status Toggle */}
-                                        <label className="flex items-center gap-3 cursor-pointer">
-                                            <span className="block text-base font-semibold text-black mb-2">
-                                                Status                            </span>
-                                            <div
-                                                className={`flex items-center h-6 w-12 rounded-full transition-all duration-300 ${watch("status") ? "bg-amber-500" : "bg-zinc-600"
-                                                    }`}
-                                            >
-                                                <input type="checkbox" {...register(`variants.${variantIndex}.status` as const)}
-                                                    defaultChecked hidden />
-                                                <div
-                                                    className={`h-6 w-6 rounded-full bg-white shadow-md transform transition-all duration-300 ${watch("status") ? "translate-x-6" : "translate-x-0"
-                                                        }`}
-                                                ></div>
-                                            </div>
-                                        </label>
                                     </div>
                                 );
                             })}
