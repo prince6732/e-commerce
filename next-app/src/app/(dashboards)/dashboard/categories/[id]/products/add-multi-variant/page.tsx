@@ -13,16 +13,17 @@ import {
     Product
 } from "@/common/interface";
 import { useLoader } from "@/context/LoaderContext";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FaTimes } from "react-icons/fa";
 import { getCategoryByIdForProduct } from "../../../../../../../../utils/category";
 import { fetchBrands } from "../../../../../../../../utils/brand";
-import { createProduct, updateProduct } from "../../../../../../../../utils/product";
+import { createProduct, getProductById, updateProduct } from "../../../../../../../../utils/product";
 import ImageCropperModal from "@/components/(frontend)/ImageCropperModal";
 import VariantOption from "@/components/(sheared)/Option";
 import { X } from "lucide-react";
 
 const option = yup.object({
+    id: yup.mixed().nullable().optional(),
     hasAttributeImages1: yup.boolean(),
     hasAttributeImages2: yup.boolean(),
     title: yup.string(),
@@ -95,17 +96,16 @@ function VariantProductForm() {
     const [attributes, setAttributes] = useState<CategoryAttribute[]>([]);
     const [variantOneHasImages, setVariantOneHasImages] = useState<boolean>(false);
     const [variantTwoHasImages, setVariantTwoHasImages] = useState<boolean>(false);
-
-    const [category, setCategory] = useState<Category | null>(null);
     const { showLoader, hideLoader } = useLoader();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [showToast, setShowToast] = useState(false);
     const [toastType, setToastType] = useState<"success" | "error" | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const router = useRouter()
     const params = useParams();
+    const searchParams = useSearchParams();
+    const productId = searchParams.get("productId");
     const categoryId = params?.id as string;
 
     const config = useMemo(
@@ -139,9 +139,16 @@ function VariantProductForm() {
     });
 
     useEffect(() => {
-        getAllBrands();
-        fetchCategory();
-    }, []);
+        const initializeForm = async () => {
+            await fetchCategory();
+            await getAllBrands();
+            if (productId) {
+                await fetchProductDetails(productId);
+            }
+        };
+        
+        initializeForm();
+    }, [productId]);
 
     useEffect(() => {
         if (successMessage) {
@@ -159,6 +166,9 @@ function VariantProductForm() {
         if (showToast) {
             const timer = setTimeout(() => {
                 setShowToast(false);
+                if (successMessage) {
+                    router.back();
+                }
                 setSuccessMessage(null);
                 setErrorMessage(null);
                 setToastMessage(null);
@@ -167,6 +177,110 @@ function VariantProductForm() {
             return () => clearTimeout(timer);
         }
     }, [showToast]);
+
+    const fetchProductDetails = async (id: string) => {
+        showLoader();
+        try {
+            const res = await getProductById(id);
+            if (res.success && res.result) {
+                const product = res.result;
+                setValue("name", product.name);
+                setValue("description", product.description);
+                setValue("itemCode", product.item_code);
+                setValue("brandId", product.brand?.id || "");
+                setValue("status", product.status);
+                setValue("image_url", product.image_url || "");
+                setValue("detailJson", product.detail_json ? JSON.parse(product.detail_json) : []);
+                setValue("featureJson", product.feature_json ? JSON.parse(product.feature_json).map((v: string) => ({ value: v })) : []);
+                setValue("imageJson", product.image_json ? JSON.parse(product.image_json) : []);
+
+                setPreview(product.image_url || null);
+                setMultiPreview(product.image_json ? JSON.parse(product.image_json) : []);
+
+                if (!product.variants || product.variants.length === 0) {
+                    hideLoader();
+                    return;
+                }
+
+                // Get attributes from item_attributes
+                const productAttributes = product.item_attributes || [];
+                if (productAttributes.length < 2) {
+                    hideLoader();
+                    return;
+                }
+
+                // Sort attributes by is_primary
+                const sortedAttrs = productAttributes.sort((a: any, b: any) => {
+                    if (a.is_primary && !b.is_primary) return -1;
+                    if (!a.is_primary && b.is_primary) return 1;
+                    return 0;
+                });
+
+                const primaryAttrId = sortedAttrs[0].attribute_id;
+                const secondaryAttrId = sortedAttrs[1].attribute_id;
+
+                // Group variants by primary attribute value
+                const variantsByAttribute1 = product.variants.reduce((acc: any, variant: any) => {
+                    const attr1 = variant.attribute_values?.find((av: any) => av.attribute_id === primaryAttrId);
+                    if (attr1) {
+                        if (!acc[attr1.id]) {
+                            acc[attr1.id] = [];
+                        }
+                        acc[attr1.id].push(variant);
+                    }
+                    return acc;
+                }, {});
+
+                const newVariants = Object.keys(variantsByAttribute1).map((key) => {
+                    const group = variantsByAttribute1[key];
+                    const firstVariant = group[0];
+                    const attr1Value = firstVariant.attribute_values?.find((av: any) => av.attribute_id === primaryAttrId);
+
+                    // Extract title prefix if exists
+                    const titleParts = firstVariant.title ? firstVariant.title.split(' ') : [''];
+                    const variantTitle = titleParts[0] || '';
+
+                    return {
+                        title: variantTitle,
+                        attributeValue: attr1Value?.id?.toString() || "",
+                        image_url: firstVariant.image_url || "",
+                        imageJson: firstVariant.image_json ? JSON.parse(firstVariant.image_json) : [],
+                        hasAttributeImages1: variantOneHasImages,
+                        hasAttributeImages2: variantTwoHasImages,
+                        options: group.map((v: any) => {
+                            const attr2Value = v.attribute_values?.find((av: any) => av.attribute_id === secondaryAttrId);
+                            
+                            // Extract option title (everything after first word)
+                            const vTitleParts = v.title ? v.title.split(' ') : [];
+                            const optionTitle = vTitleParts.slice(1).join(' ') || '';
+
+                            return {
+                                id: v.id,
+                                title: optionTitle,
+                                attributeValue: attr2Value?.id?.toString() || "",
+                                sku: v.sku,
+                                mrp: parseFloat(v.mrp) || 0,
+                                sp: parseFloat(v.sp) || 0,
+                                bp: parseFloat(v.bp) || 0,
+                                stock: v.stock || 0,
+                                status: v.status,
+                                image_url: v.image_url || "",
+                                imageJson: v.image_json ? JSON.parse(v.image_json) : [],
+                                hasAttributeImages1: variantOneHasImages,
+                                hasAttributeImages2: variantTwoHasImages,
+                            }
+                        })
+                    }
+                });
+
+                setValue("variants", newVariants);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            hideLoader();
+        }
+    };
 
     const fetchCategory = async () => {
         showLoader();
@@ -177,15 +291,14 @@ function VariantProductForm() {
                 setErrorMessage("Category data not found.");
                 return;
             }
-
-            setCategory(data.result);
-
             const normalizedAttributes = data.result.attributes?.map((attr: any) => ({
+                attributeId: attr.id,
                 id: attr.id,
                 name: attr.name,
                 description: attr.description,
                 hasImages: attr.pivot?.has_images ?? false,
                 isPrimary: attr.pivot?.is_primary ?? false,
+                has_images: attr.pivot?.has_images ?? false,
                 values: attr.values || [],
             })) || [];
 
@@ -262,14 +375,26 @@ function VariantProductForm() {
                         ...restOfOption
                     } = option;
 
-                    return {
+                    const formattedVariant: any = {
                         ...restOfOption,
                         title: `${variant.title} ${option.title}`,
                         status: true,
-                        attributeValues: [variant.attributeValue, attributeValue].filter(Boolean),
                         image_url: getImageUrl(data, variantIndex, optionIndex),
-                        image_json: JSON.stringify(getImageList(data, variantIndex, optionIndex)), // ✅ convert array to string
+                        image_json: JSON.stringify(getImageList(data, variantIndex, optionIndex)),
                     };
+                    
+                    // Only include attributeValues if they exist
+                    const attributeValues = [variant.attributeValue, attributeValue].filter(Boolean);
+                    if (attributeValues.length > 0) {
+                        formattedVariant.attributeValues = attributeValues;
+                    }
+                    
+                    // Include variant ID if updating and ID exists
+                    if (productId && option.id) {
+                        formattedVariant.id = option.id;
+                    }
+                    
+                    return formattedVariant;
                 })
             );
             const payload = {
@@ -287,25 +412,25 @@ function VariantProductForm() {
             }
             let res: ApiResponse<string>;
 
-            if (selectedProduct) {
-                res = await updateProduct(selectedProduct.id, payload as any);
-                if (res.success) {
-                    setSuccessMessage("Product updated successfully!");
-                } else {
-                    setErrorMessage(res.message || "Failed to update product");
-                }
+            if (productId) {
+                res = await updateProduct(productId, payload as any);
             } else {
                 res = await createProduct(payload as any);
-                if (res.success) {
-                    setSuccessMessage("Product created successfully!");
-                    setTimeout(() => router.back(), 4000);
+            }
+
+            if (res.success) {
+                setSuccessMessage(res.message || "Success!");
+            } else {
+                if (res.errors) {
+                    const errorMessages = Object.values(res.errors).flat().join(' ');
+                    setErrorMessage(errorMessages || res.message || "An error occurred.");
                 } else {
-                    setErrorMessage(res.message || "Failed to create product");
+                    setErrorMessage(res.message || "An error occurred.");
                 }
             }
         } catch (err) {
             console.error("Submit error:", err);
-            setErrorMessage(selectedProduct ? "Failed to update product" : "Failed to create product");
+            setErrorMessage(productId ? "Failed to update product" : "Failed to create product");
         } finally {
             hideLoader();
         }
@@ -350,7 +475,7 @@ function VariantProductForm() {
                     <div className="flex items-center justify-between">
                         {/* Title */}
                         <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
-                            Fill Product Details
+                            {productId ? "Update Product" : "Fill Product Details"}
                         </h2>
                     </div>
 
@@ -597,7 +722,6 @@ function VariantProductForm() {
                                                 ))}
                                         </div>
                                     </div>
-
                                 </div>
                             </>
                         )}
@@ -673,25 +797,27 @@ function VariantProductForm() {
                                         className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm flex flex-col gap-2 relative"
                                     >
 
-                                        <button
-                                            type="button"
-                                            onClick={() => removeVariant(variantIndex)}
-                                            title="Remove Variant"
-                                            className="absolute top-[-6] right-[-8]
-                                                                                        flex items-center justify-center
-                                                                                        h-9 w-9
-                                                                                        rounded-xl
-                                                                                        bg-red-50
-                                                                                        text-red-600
-                                                                                        border border-red-200
-                                                                                        hover:bg-red-500 hover:text-white 
-                                                                                        hover:border-red-500
-                                                                                        shadow-sm hover:shadow-md
-                                                                                        transition-all duration-200
-                                                                                    "
-                                        >
-                                            <X size={20} className="text-red-600 font-bold hover:text-white"></X>
-                                        </button>
+                                        {!productId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeVariant(variantIndex)}
+                                                title="Remove Variant"
+                                                className="absolute top-[-6] right-[-8]
+                                                                                            flex items-center justify-center
+                                                                                            h-9 w-9
+                                                                                            rounded-xl
+                                                                                            bg-red-50
+                                                                                            text-red-600
+                                                                                            border border-red-200
+                                                                                            hover:bg-red-500 hover:text-white 
+                                                                                            hover:border-red-500
+                                                                                            shadow-sm hover:shadow-md
+                                                                                            transition-all duration-200
+                                                                                        "
+                                            >
+                                                <X size={20} className="text-red-600 font-bold hover:text-white"></X>
+                                            </button>
+                                        )}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start">
 
                                             {/* Variant Name */}
@@ -847,6 +973,7 @@ function VariantProductForm() {
                                                     attributeOneHasImages={variantOneHasImages}
                                                     attributeTwoHasImages={variantTwoHasImages}
                                                     attribute={attributes[1]}
+                                                    productId={productId}
                                                 />
                                             </div>
                                         </div>
@@ -884,7 +1011,7 @@ function VariantProductForm() {
                                 hover:shadow-lg transition-all duration-200
                             "
                         >
-                            Save Product
+                            {productId ? "Update Product" : "Save Product"}
                         </button>
 
                     </div>

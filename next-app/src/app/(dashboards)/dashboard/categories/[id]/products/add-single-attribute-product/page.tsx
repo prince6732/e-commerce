@@ -13,15 +13,16 @@ import {
     Product
 } from "@/common/interface";
 import { useLoader } from "@/context/LoaderContext";
-import { useParams, useRouter } from "next/navigation";
-import { FaTimes } from "react-icons/fa";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { FaArrowLeft, FaTimes } from "react-icons/fa";
 import { getCategoryByIdForProduct } from "../../../../../../../../utils/category";
 import { fetchBrands } from "../../../../../../../../utils/brand";
-import { createProduct, updateProduct } from "../../../../../../../../utils/product";
+import { createProduct, getProductById, updateProduct } from "../../../../../../../../utils/product";
 import ImageCropperModal from "@/components/(frontend)/ImageCropperModal";
 import { X } from "lucide-react";
 
 const variant = yup.object({
+    id: yup.mixed().nullable().optional(),
     has_images: yup.boolean(),
     title: yup.string().required('title is required'),
     attributeValue: yup.string().required("Attribute Value 1 is required"),
@@ -48,7 +49,7 @@ const variant = yup.object({
         .number()
         .typeError("Stopck value must be a number")
         .required("Stock is required")
-        .min(0, "Stock must be greater than or equal to 0")
+        .min(1, "Stock must be greater than or equal to 0")
         .max(100000, "Stock exceeds limit"),
     status: yup.boolean().default(true),
     imageUrl: yup.string().when('has_images', {
@@ -108,6 +109,8 @@ function VariantProductForm() {
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const router = useRouter()
     const params = useParams();
+    const searchParams = useSearchParams();
+    const productId = searchParams.get("productId");
     const categoryId = params?.id as string;
 
     const config = useMemo(
@@ -143,7 +146,53 @@ function VariantProductForm() {
     useEffect(() => {
         getAllBrands();
         fetchCategory();
-    }, []);
+        if (productId) {
+            fetchProductDetails(productId);
+        }
+    }, [productId]);
+
+    const fetchProductDetails = async (id: string) => {
+        showLoader();
+        try {
+            const res = await getProductById(id);
+            if (res.success && res.result) {
+                const product = res.result;
+                setValue("name", product.name);
+                setValue("description", product.description);
+                setValue("itemCode", product.item_code);
+                setValue("brandId", product.brand?.id || "");
+                setValue("status", product.status);
+                setValue("image_url", product.image_url || "");
+                setValue("detailJson", product.detail_json ? JSON.parse(product.detail_json) : []);
+                setValue("featureJson", product.feature_json ? JSON.parse(product.feature_json).map((v: string) => ({ value: v })) : []);
+                setValue("imageJson", product.image_json ? JSON.parse(product.image_json) : []);
+
+                if (product.variants && product.variants.length > 0) {
+                    setValue("variants", product.variants.map((v: any) => ({
+                        id: v.id,
+                        title: v.title,
+                        attributeValue: v.attribute_values?.[0]?.id,
+                        sku: v.sku,
+                        mrp: v.mrp,
+                        sp: v.sp,
+                        bp: v.bp,
+                        stock: v.stock,
+                        status: v.status,
+                        imageUrl: v.image_url,
+                        imageJson: v.image_json ? JSON.parse(v.image_json) : [],
+                        has_images: variantHasImages,
+                    })));
+                }
+
+                setPreview(product.image_url || null);
+                setMultiPreview(product.image_json ? JSON.parse(product.image_json) : []);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            hideLoader();
+        }
+    };
 
     const fetchCategory = async () => {
         showLoader();
@@ -204,19 +253,32 @@ function VariantProductForm() {
     });
 
     const onSubmit = async (data: FormData) => {
-        const formattedVariants = (data.variants ?? []).map(v => ({
-            title: v.title,
-            sku: v.sku,
-            mrp: v.mrp,
-            sp: v.sp,
-            bp: v.bp,
-            stock: v.stock,
-            status: v.status,
-            has_images: v.has_images,
-            image_url: v.imageUrl ?? null,
-            image_json: v.imageJson?.length ? JSON.stringify(v.imageJson) : null,
-            attributeValues: v.attributeValue ? [v.attributeValue] : [],
-        }));
+        const formattedVariants = (data.variants ?? []).map((v: any) => {
+            const formatted: any = {
+                title: v.title,
+                sku: v.sku,
+                mrp: v.mrp,
+                sp: v.sp,
+                bp: v.bp,
+                stock: v.stock,
+                status: v.status,
+                has_images: v.has_images,
+                image_url: v.imageUrl ?? null,
+                image_json: v.imageJson?.length ? JSON.stringify(v.imageJson) : null,
+            };
+
+            // Only include attributeValues if a value is selected
+            if (v.attributeValue) {
+                formatted.attributeValues = [v.attributeValue];
+            }
+
+            // Include variant ID if updating
+            if (productId && v.id) {
+                formatted.id = v.id;
+            }
+
+            return formatted;
+        });
 
         const payload = {
             name: data.name,
@@ -233,21 +295,27 @@ function VariantProductForm() {
         };
 
         try {
-            if (selectedProduct) {
-                await updateProduct(selectedProduct.id, payload as any);
-                setSuccessMessage("Product updated successfully!");
+            let res: ApiResponse<string>;
+
+            if (productId) {
+                res = await updateProduct(productId, payload as any);
             } else {
-                const res: ApiResponse<string> = await createProduct(payload as any);
-                if (res.success) {
-                    setSuccessMessage("Product created successfully!");
-                    setTimeout(() => router.back(), 4000);
+                res = await createProduct(payload as any);
+            }
+
+            if (res.success) {
+                setSuccessMessage(res.message || "Success!");
+            } else {
+                if (res.errors) {
+                    const errorMessages = Object.values(res.errors).flat().join(' ');
+                    setErrorMessage(errorMessages || res.message || "An error occurred.");
                 } else {
-                    setErrorMessage(res.message || "Failed to create product");
+                    setErrorMessage(res.message || "An error occurred.");
                 }
             }
         } catch (err) {
-            console.error(err);
-            setErrorMessage(selectedProduct ? "Failed to update product" : "Failed to create product");
+            console.error("Submit error:", err);
+            setErrorMessage(productId ? "Failed to update product" : "Failed to create product");
         } finally {
             hideLoader();
         }
@@ -269,6 +337,9 @@ function VariantProductForm() {
         if (showToast) {
             const timer = setTimeout(() => {
                 setShowToast(false);
+                if (successMessage) {
+                    router.back();
+                }
                 setSuccessMessage(null);
                 setErrorMessage(null);
                 setToastMessage(null);
@@ -292,8 +363,20 @@ function VariantProductForm() {
                     <div className="flex items-center justify-between">
                         {/* Title */}
                         <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
-                            Fill Product Details
+                            {productId ? "Update Product" : "Fill Product Details"}
                         </h2>
+                        {/* Back Button */}
+                        <button
+                            type="button"
+                            onClick={() => router.back()}
+                            className="flex items-center gap-2 px-4 py-2 
+                                    bg-gray-100 hover:bg-gray-200 
+                                    text-gray-700 rounded-xl shadow-sm 
+                                    hover:shadow-md transition-all duration-200"
+                        >
+                            <FaArrowLeft className="text-lg" />
+                            <span className="font-medium">Back</span>
+                        </button>
                     </div>
 
                 </div>
@@ -620,25 +703,27 @@ function VariantProductForm() {
                                         key={variant.id}
                                         className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm flex flex-col gap-4 relative"
                                     >
-                                        <button
-                                            type="button"
-                                            onClick={() => removeVariant(variantIndex)}
-                                            title="Remove Variant"
-                                            className="absolute top-[-6] right-[-8]
-                                                flex items-center justify-center
-                                                h-9 w-9
-                                                rounded-xl
-                                                bg-red-50
-                                                text-red-600
-                                                border border-red-200
-                                                hover:bg-red-500 hover:text-white 
-                                                hover:border-red-500
-                                                shadow-sm hover:shadow-md
-                                                transition-all duration-200
-                                            "
-                                        >
-                                            <X size={20} className="text-red-600 font-bold hover:text-white"></X>
-                                        </button>
+                                        {!productId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeVariant(variantIndex)}
+                                                title="Remove Variant"
+                                                className="absolute top-[-6] right-[-8]
+                                                    flex items-center justify-center
+                                                    h-9 w-9
+                                                    rounded-xl
+                                                    bg-red-50
+                                                    text-red-600
+                                                    border border-red-200
+                                                    hover:bg-red-500 hover:text-white 
+                                                    hover:border-red-500
+                                                    shadow-sm hover:shadow-md
+                                                    transition-all duration-200
+                                                "
+                                            >
+                                                <X />
+                                            </button>
+                                        )}
 
                                         <div className="flex flex-col sm:flex-row gap-4 items-center">
                                             <div className="flex-1">
@@ -881,7 +966,7 @@ function VariantProductForm() {
                                 hover:shadow-lg transition-all duration-200
                             "
                         >
-                            Save Product
+                            {productId ? "Update Product" : "Save Product"}
                         </button>
 
                     </div>

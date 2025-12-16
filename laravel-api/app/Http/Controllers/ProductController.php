@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CategoryAttribute;
 use App\Models\Product;
+use App\Models\ProductAttributeValue;
 use App\Models\Variant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,9 +13,11 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('variants')
+        $products = Product::with(['variants' => function ($query) {
+            $query->where('status', true);
+        }])
             ->select('id', 'name', 'description', 'image_url', 'status')
-            ->active()
+            ->where('status', true)
             ->get()
             ->map(function ($product) {
                 if (!$product->image_url && $product->variants->count() > 0) {
@@ -53,11 +56,13 @@ class ProductController extends Controller
     public function show($id)
     {
         $product = Product::with([
-            'variants.attributeValues.attribute',
+            'variants' => function ($query) {
+                $query->where('status', true)->with(['attributeValues.attribute']);
+            },
             'brand',
             'category',
             'itemAttributes.attribute',
-        ])->find($id);
+        ])->where('status', true)->find($id);
 
         if (!$product) {
             return response()->json([
@@ -233,31 +238,31 @@ class ProductController extends Controller
 
             if (!empty($validated['variants'])) {
                 foreach ($validated['variants'] as $variantData) {
+                    $attributeValues = $variantData['attributeValues'] ?? [];
                     $variantData['product_id'] = $product->id;
+                    
+                    // Remove attributeValues from variantData before creating variant
+                    unset($variantData['attributeValues']);
+                    
                     $variant = Variant::create($variantData);
 
-                    if (!empty($variantData['attributeValues'])) {
-                        foreach ($variantData['attributeValues'] as $attrValueId) {
-                            DB::table('variant_attribute_values')->insert([
-                                'variant_id' => $variant->id,
-                                'attribute_value_id' => $attrValueId,
-                            ]);
+                    // Sync attribute values using Eloquent relationship
+                    if (!empty($attributeValues)) {
+                        $variant->attributeValues()->sync($attributeValues);
+                        foreach ($attributeValues as $attrValueId) {
                             $allAttributeValueIds->push($attrValueId);
                         }
                     }
                 }
             }
             if ($allAttributeValueIds->isNotEmpty()) {
-                $attributeIds = $allAttributeValueIds
-                    ->unique()
-                    ->map(fn($attrValueId) => DB::table('attribute_values')
-                        ->where('id', $attrValueId)
-                        ->value('attribute_id'))
-                    ->filter()
-                    ->unique()
-                    ->values();
+                // Get unique attribute value IDs with their attribute IDs
+                $attributeValueData = DB::table('attribute_values')
+                    ->whereIn('id', $allAttributeValueIds->unique()->values())
+                    ->get()
+                    ->groupBy('attribute_id');
 
-                foreach ($attributeIds as $attributeId) {
+                foreach ($attributeValueData as $attributeId => $values) {
                     $categoryAttribute = CategoryAttribute::query()
                         ->forCategory($product->category_id)
                         ->forAttribute($attributeId)
@@ -266,12 +271,22 @@ class ProductController extends Controller
                     $hasImages = $categoryAttribute->has_images ?? false;
                     $isPrimary = $categoryAttribute->is_primary ?? false;
 
+                    // Insert into item_attributes (product-attribute relationship)
                     DB::table('item_attributes')->insert([
                         'product_id' => $product->id,
                         'attribute_id' => $attributeId,
                         'has_images' => $hasImages,
                         'is_primary' => $isPrimary,
                     ]);
+
+                    // Insert each attribute value used by this product into product_attribute_values
+                    foreach ($values as $value) {
+                        DB::table('product_attribute_values')->insert([
+                            'product_id' => $product->id,
+                            'attribute_id' => $attributeId,
+                            'attribute_value_id' => $value->id,
+                        ]);
+                    }
                 }
             }
 
@@ -304,6 +319,20 @@ class ProductController extends Controller
         if (isset($data['variants']) && is_string($data['variants'])) {
             $data['variants'] = json_decode($data['variants'], true);
         }
+        
+        // Ensure attributeValues are preserved as arrays in each variant
+        if (isset($data['variants']) && is_array($data['variants'])) {
+            foreach ($data['variants'] as $index => $variant) {
+                if (isset($variant['attributeValues'])) {
+                    // Ensure it's an array
+                    if (is_string($variant['attributeValues'])) {
+                        $data['variants'][$index]['attributeValues'] = json_decode($variant['attributeValues'], true);
+                    }
+                    // Ensure values are integers
+                    $data['variants'][$index]['attributeValues'] = array_map('intval', $data['variants'][$index]['attributeValues']);
+                }
+            }
+        }
 
         $validated = validator($data, [
             'name'         => 'required|string|max:100',
@@ -324,14 +353,22 @@ class ProductController extends Controller
                 'required_with:variants',
                 'string',
                 'max:100',
-                function ($attribute, $value, $fail) use ($data) {
-                    $variantId = data_get($data, str_replace('.sku', '.id', $attribute));
-                    $exists = Variant::where('sku', $value)
-                        ->when($variantId, fn($q) => $q->where('id', '!=', $variantId))
-                        ->exists();
+                function ($attribute, $value, $fail) use ($product, $data) {
+                    // Get the variant index and ID from the current validation path
+                    $variantIndex = explode('.', $attribute)[1];
+                    $variantId = data_get($data, "variants.{$variantIndex}.id");
 
-                    if ($exists) {
-                        $fail("The SKU '$value' is already in use by another variant.");
+                    // Build query to check for duplicate SKUs
+                    $query = Variant::where('sku', $value);
+                    
+                    // If updating an existing variant, exclude it from the check
+                    if ($variantId) {
+                        $query->where('id', '!=', $variantId);
+                    }
+                    
+                    // Check if SKU exists
+                    if ($query->exists()) {
+                        $fail("The SKU '{$value}' is already in use by another variant.");
                     }
                 },
             ],
@@ -342,6 +379,8 @@ class ProductController extends Controller
             'variants.*.status'    => 'boolean',
             'variants.*.image_url' => 'nullable|string|max:255',
             'variants.*.image_json' => 'nullable|string',
+            'variants.*.attributeValues' => 'nullable|array',
+            'variants.*.attributeValues.*' => 'integer|exists:attribute_values,id',
         ])->validate();
 
         DB::beginTransaction();
@@ -361,44 +400,134 @@ class ProductController extends Controller
 
             $product->update($validated);
 
+            $allAttributeValueIds = collect();
+            $variantIds = [];
+            
             if (!empty($validated['variants'])) {
-                $variantIds = [];
-
                 foreach ($validated['variants'] as $variantData) {
+                    // Handle image JSON
                     if (isset($variantData['imageList']) && is_array($variantData['imageList'])) {
                         $variantData['image_json'] = json_encode($variantData['imageList']);
                     }
 
-                    if (isset($variantData['id'])) {
-                        $variant = Variant::find($variantData['id']);
+                    $variant = null;
+                    
+                    // Check if variant has ID (existing variant)
+                    if (isset($variantData['id']) && !empty($variantData['id'])) {
+                        $variant = Variant::where('id', $variantData['id'])
+                            ->where('product_id', $product->id)
+                            ->first();
+                        
                         if ($variant) {
-                            $variant->update($variantData);
-                            $variantIds[] = $variant->id;
+                            // Update existing variant
+                            $updateData = collect($variantData)->except(['id', 'attributeValues'])->toArray();
+                            $variant->update($updateData);
                         }
-                    } else {
+                    }
+                    
+                    // If no variant found (new variant) or no ID provided
+                    if (!$variant) {
                         $variantData['product_id'] = $product->id;
-                        $newVariant = Variant::create($variantData);
-                        $variantIds[] = $newVariant->id;
+                        unset($variantData['id']); // Remove ID if present to avoid issues
+                        $createData = collect($variantData)->except(['attributeValues'])->toArray();
+                        $variant = Variant::create($createData);
+                    }
+
+                    if ($variant) {
+                        $variantIds[] = $variant->id;
+                        
+                        // Sync attribute values if provided
+                        if (isset($variantData['attributeValues'])) {
+                            // Convert string array to integers if needed
+                            $attributeValueIds = array_map('intval', $variantData['attributeValues']);
+                            
+                            // Sync the attribute values (updates the relationship)
+                            $variant->attributeValues()->sync($attributeValueIds);
+                            
+                            // Collect attribute value IDs for product_attribute_values table
+                            foreach ($attributeValueIds as $attrValueId) {
+                                $allAttributeValueIds->push($attrValueId);
+                            }
+                        } else {
+                            // If no attributeValues provided, keep existing ones
+                            // but also collect them for product_attribute_values
+                            $existingAttrValues = $variant->attributeValues->pluck('id')->toArray();
+                            foreach ($existingAttrValues as $attrValueId) {
+                                $allAttributeValueIds->push($attrValueId);
+                            }
+                        }
                     }
                 }
 
+                // Delete variants that are no longer in the update
                 Variant::where('product_id', $product->id)
                     ->whereNotIn('id', $variantIds)
                     ->delete();
+            } else {
+                // No variants provided, delete all existing ones
+                $product->variants()->delete();
+            }
+
+            // Sync item attributes and product attribute values
+            DB::table('item_attributes')->where('product_id', $product->id)->delete();
+            DB::table('product_attribute_values')->where('product_id', $product->id)->delete();
+            
+            if ($allAttributeValueIds->isNotEmpty()) {
+                // Get unique attribute value IDs with their attribute IDs
+                $attributeValueData = DB::table('attribute_values')
+                    ->whereIn('id', $allAttributeValueIds->unique()->values())
+                    ->get()
+                    ->groupBy('attribute_id');
+
+                foreach ($attributeValueData as $attributeId => $values) {
+                    $categoryAttribute = CategoryAttribute::query()
+                        ->forCategory($product->category_id)
+                        ->forAttribute($attributeId)
+                        ->first();
+
+                    // Insert into item_attributes (product-attribute relationship)
+                    DB::table('item_attributes')->insert([
+                        'product_id' => $product->id,
+                        'attribute_id' => $attributeId,
+                        'has_images' => $categoryAttribute->has_images ?? false,
+                        'is_primary' => $categoryAttribute->is_primary ?? false,
+                    ]);
+
+                    // Insert each attribute value used by this product into product_attribute_values
+                    foreach ($values as $value) {
+                        DB::table('product_attribute_values')->insert([
+                            'product_id' => $product->id,
+                            'attribute_id' => $attributeId,
+                            'attribute_value_id' => $value->id,
+                        ]);
+                    }
+                }
             }
 
             DB::commit();
 
+            // Reload product with all relationships
+            $product->load([
+                'variants.attributeValues',
+                'productAttributeValues.attributeValue',
+                'itemAttributes.attribute'
+            ]);
+
             return response()->json([
                 'res'     => 'success',
                 'message' => 'Product updated successfully.',
-                'product' => $product->load('variants'),
+                'product' => $product,
+                'debug' => [
+                    'collected_attribute_value_ids' => $allAttributeValueIds->toArray(),
+                    'variant_count' => count($variantIds),
+                ],
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'res'     => 'error',
                 'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ], 500);
         }
     }
@@ -406,11 +535,14 @@ class ProductController extends Controller
     public function getProductById(Product $product)
     {
         try {
+            // For admin - load all variants regardless of status
             $product->load([
                 'category',
                 'brand',
                 'variants.attributeValues.attribute',
                 'itemAttributes.attribute',
+                'productAttributeValues.attribute',
+                'productAttributeValues.attributeValue',
             ]);
 
             $product->setRelation(
@@ -455,8 +587,11 @@ class ProductController extends Controller
     public function getSubcategoryProduct($categoryId)
     {
         try {
-            $products = Product::with(['category', 'brand', 'variants'])
+            $products = Product::with(['category', 'brand', 'variants' => function ($query) {
+                $query->where('status', true);
+            }])
                 ->where('category_id', $categoryId)
+                ->where('status', true)
                 ->get();
 
             $products->transform(function ($product) {

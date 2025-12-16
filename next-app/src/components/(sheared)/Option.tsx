@@ -16,11 +16,12 @@ type Props = {
     attributeOneHasImages: boolean;
     attributeTwoHasImages: boolean;
     attribute: CategoryAttribute;
+    productId?: string | null;
 };
 
 const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE ?? "https://api.zelton.co.in";
 
-function VariantOption({ itemIndex, control, register, setValue, watch, errors, attributeOneHasImages, attributeTwoHasImages, attribute }: Props) {
+function VariantOption({ itemIndex, control, register, setValue, watch, errors, attributeOneHasImages, attributeTwoHasImages, attribute, productId }: Props) {
     const { fields, append, remove } = useFieldArray({
         control,
         name: `variants.${itemIndex}.options`,
@@ -57,13 +58,15 @@ function VariantOption({ itemIndex, control, register, setValue, watch, errors, 
                             key={option.id}
                             className="p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm flex flex-col gap-4 relative"
                         >
-                            <button
-                                type="button"
-                                onClick={() => remove(optionIndex)}
-                                title="Remove Option"
-                                className="absolute top-[-6] right-[-8] flex items-center justify-center h-9 w-9 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 shadow-sm hover:shadow-md transition-all duration-200">
-                                <X size={20} className="text-red-600 font-bold hover:text-white"></X>
-                            </button>
+                            {!productId && (
+                                <button
+                                    type="button"
+                                    onClick={() => remove(optionIndex)}
+                                    title="Remove Option"
+                                    className="absolute top-[-6] right-[-8] flex items-center justify-center h-9 w-9 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 shadow-sm hover:shadow-md transition-all duration-200">
+                                    <X size={20} className="text-red-600 font-bold hover:text-white"></X>
+                                </button>
+                            )}
 
                             {/* Header row */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start">

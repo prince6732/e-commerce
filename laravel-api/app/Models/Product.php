@@ -50,6 +50,12 @@ class Product extends Model
             ->with('attribute');
     }
 
+    public function productAttributeValues()
+    {
+        return $this->hasMany(ProductAttributeValue::class, 'product_id')
+            ->with(['attribute', 'attributeValue']);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', true);

@@ -9,6 +9,7 @@ import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import { getCategoryById } from "../../../../../../../utils/category";
 import { getSubcategoryProducts } from "../../../../../../../utils/product";
 import { TiInfoLargeOutline } from "react-icons/ti";
+import { Pencil } from "lucide-react";
 
 const basePath: string =
     `${process.env.NEXT_PUBLIC_UPLOAD_BASE}` || "https://api.zelton.co.in";
@@ -76,6 +77,18 @@ export default function Products() {
 
     const goToProductDetail = (product: Product) => {
         router.push(`/dashboard/categories/${categoryId}/products/${product.id}/detail`);
+    };
+
+    const editProduct = (product: Product) => {
+        if (category?.attributes && category?.attributes?.length > 0) {
+            if (category?.attributes?.length === 1) {
+                router.push(`/dashboard/categories/${categoryId}/products/add-single-attribute-product?productId=${product.id}`);
+            } else {
+                router.push(`/dashboard/categories/${categoryId}/products/add-multi-variant?productId=${product.id}`);
+            }
+        } else {
+            router.push(`/dashboard/categories/${categoryId}/products/add-single-variant?productId=${product.id}`);
+        }
     };
 
     return (
@@ -198,6 +211,13 @@ export default function Products() {
 
                                             {/* Actions */}
                                             <td className="px-6 py-4 text-right flex gap-2 justify-end">
+                                                <button
+                                                    title="Edit Product"
+                                                    onClick={() => editProduct(product)}
+                                                    className="size-10 bg-gc-300/30 hover:bg-orange-400 rounded-full flex items-center justify-center"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </button>
                                                 <button
                                                     title="View Product Details"
                                                     onClick={() => goToProductDetail(product)}

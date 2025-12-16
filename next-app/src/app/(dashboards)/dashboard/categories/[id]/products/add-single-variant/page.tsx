@@ -7,9 +7,9 @@ import * as yup from "yup";
 import JoditEditor from "jodit-react";
 import { ApiResponse, Brand, Product } from "@/common/interface";
 import { useLoader } from "@/context/LoaderContext";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import ImageCropperModal from "@/components/(frontend)/ImageCropperModal";
-import { createProduct, updateProduct } from "../../../../../../../../utils/product";
+import { createProduct, getProductById, updateProduct } from "../../../../../../../../utils/product";
 import { fetchBrands } from "../../../../../../../../utils/brand";
 
 const schema = yup.object({
@@ -67,6 +67,7 @@ function ProductForm() {
     const [preview, setPreview] = useState<string | null>(null);
     const [multiPreview, setMultiPreview] = useState<string[]>([]);
     const [brands, setBrands] = useState<Brand[]>([]);
+    const [variantId, setVariantId] = useState<string | number | null>(null);
     const { showLoader, hideLoader } = useLoader();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -76,6 +77,8 @@ function ProductForm() {
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const router = useRouter()
     const params = useParams();
+    const searchParams = useSearchParams();
+    const productId = searchParams.get("productId");
     const categoryId = params?.id as string;
     const config = useMemo(
         () => ({
@@ -109,7 +112,46 @@ function ProductForm() {
 
     useEffect(() => {
         getAllBrands();
-    }, []);
+        if (productId) {
+            fetchProductDetails(productId);
+        }
+    }, [productId]);
+
+    const fetchProductDetails = async (id: string) => {
+        showLoader();
+        try {
+            const res = await getProductById(id);
+            if (res.success && res.result) {
+                const product = res.result;
+                setValue("name", product.name);
+                setValue("description", product.description);
+                setValue("itemCode", product.item_code);
+                setValue("brandId", product.brand?.id || "");
+                setValue("status", product.status);
+                setValue("image_url", product.image_url || "");
+                setValue("detailJson", product.detail_json ? JSON.parse(product.detail_json) : []);
+                setValue("featureJson", product.feature_json ? JSON.parse(product.feature_json).map((v: string) => ({ value: v })) : []);
+                setValue("imageJson", product.image_json ? JSON.parse(product.image_json) : []);
+                
+                if (product.variants && product.variants.length > 0) {
+                    setVariantId(product.variants[0].id);
+                    setValue("sku", product.variants[0].sku);
+                    setValue("mrp", product.variants[0].mrp);
+                    setValue("bp", product.variants[0].bp);
+                    setValue("sp", product.variants[0].sp);
+                    setValue("stock", product.variants[0].stock);
+                }
+                
+                setValue("variants", product.variants || []);
+                setPreview(product.image_url || null);
+                setMultiPreview(product.image_json ? JSON.parse(product.image_json) : []);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            hideLoader();
+        }
+    };
 
     const getAllBrands = async () => {
         showLoader();
@@ -135,6 +177,19 @@ function ProductForm() {
     });
 
     const onSubmit = async (data: FormData) => {
+        const variant: any = {
+            mrp: data.mrp,
+            stock: data.stock,
+            bp: data.bp,
+            sp: data.sp,
+            sku: data.sku,
+        };
+        
+        // Include variant ID if updating
+        if (productId && variantId) {
+            variant.id = variantId;
+        }
+        
         const payload = {
             name: data.name,
             description: data.description,
@@ -146,35 +201,32 @@ function ProductForm() {
             featureList: data.featureJson?.map(feature => feature.value) || [],
             image_url: data.image_url,
             imageList: data.imageJson || [],
-            variants: [
-                {
-                    mrp: data.mrp,
-                    stock: data.stock,
-                    bp: data.bp,
-                    sp: data.sp,
-                    sku: data.sku,
-                },
-            ],
+            variants: [variant],
         };
 
         try {
-            if (selectedProduct) {
-                await updateProduct(selectedProduct.id, payload as any);
-                setSuccessMessage("Product updated successfully!");
+            let res: ApiResponse<string>;
 
+            if (productId) {
+                res = await updateProduct(productId, payload as any);
             } else {
-                const res: ApiResponse<string> = await createProduct(payload as any);
-                if (res.success) {
-                    setSuccessMessage("Product created successfully!");
+                res = await createProduct(payload as any);
+            }
 
+            if (res.success) {
+                setSuccessMessage(res.message || "Success!");
+                setTimeout(() => router.back(), 4000);
+            } else {
+                if (res.errors) {
+                    const errorMessages = Object.values(res.errors).flat().join(' ');
+                    setErrorMessage(errorMessages || res.message || "An error occurred.");
                 } else {
-                    setErrorMessage(res.message || "Failed to create product");
+                    setErrorMessage(res.message || "An error occurred.");
                 }
-
             }
         } catch (err) {
-            console.error(err);
-            setErrorMessage(selectedProduct ? "Failed to update product" : "Failed to create producttttttttt");
+            console.error("Submit error:", err);
+            setErrorMessage(productId ? "Failed to update product" : "Failed to create product");
         } finally {
             hideLoader();
         }
@@ -196,11 +248,13 @@ function ProductForm() {
         if (showToast) {
             const timer = setTimeout(() => {
                 setShowToast(false);
+                if (successMessage) {
+                    router.back();
+                }
                 setSuccessMessage(null);
                 setErrorMessage(null);
                 setToastMessage(null);
                 setToastType(null);
-                router.back();
             }, 3000);
             return () => clearTimeout(timer);
         }
@@ -219,7 +273,7 @@ function ProductForm() {
                     <div className="flex items-center justify-between">
                         {/* Title */}
                         <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
-                            Fill Product Details
+                            {productId ? "Update Product" : "Fill Product Details"}
                         </h2>
                     </div>
 
@@ -285,7 +339,7 @@ function ProductForm() {
                         </div>
                         {/* SP */}
                         <div>
-                            <label className="block text-base font-semibold text-black mb-1">Selling Price<span className="text-red-600">*</span><span className="text-red-600">*</span></label>
+                            <label className="block text-base font-semibold text-black mb-1">Selling Price<span className="text-red-600">*</span></label>
                             <input
                                 {...register("sp")}
                                 type="number"
@@ -322,7 +376,7 @@ function ProductForm() {
                         </div>
                         {/* Brand */}
                         <div>
-                            <label className="block text-base font-semibold text-black mb-1"><span className="text-red-600">*</span></label>
+                            <label className="block text-base font-semibold text-black mb-1">Brand<span className="text-red-600">*</span></label>
                             <select
                                 {...register("brandId")}
                                 className="w-full px-3 py-2 rounded-lg bg-white text-black border border-gray-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
@@ -537,7 +591,7 @@ function ProductForm() {
                                 hover:shadow-lg transition-all duration-200
                             "
                         >
-                            Save Product
+                            {productId ? "Update Product" : "Save Product"}
                         </button>
 
                     </div>
