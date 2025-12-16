@@ -398,7 +398,7 @@ export default function HomeUI() {
       <CategorySlider />
       <ProductSlider />
       <PopularProductsSlider />
-      <Testimonials />
+      {/* <Testimonials /> */}
     </div>
   );
 }

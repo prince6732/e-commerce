@@ -192,12 +192,15 @@ Route::middleware(['auth:sanctum', 'check.user.status'])->group(function () {
     Route::delete('/delete-brand/{brand}', [BrandController::class, 'destroy']);
 
     // ========== ADMIN: PRODUCT MANAGEMENT ==========
+    Route::get('/admin-products', [ProductController::class, 'getAdminProducts']);
+    Route::get('/admin-product-details/{product}', [ProductController::class, 'getProductDetails']);
     Route::post('/create-product', [ProductController::class, 'store']);
     Route::put('/update-product/{product}', [ProductController::class, 'update']);
     Route::delete('/delete-product/{product}', [ProductController::class, 'destroy']);
     Route::get('/admin-search-products', [ProductController::class, 'search']);
 
     // ========== ADMIN: VARIANT MANAGEMENT ==========
+    Route::delete('/delete-variant/{variant}', [ProductController::class, 'deleteVariant']);
     Route::post('/create-variant', [VariantController::class, 'store']);
     Route::put('/update-variant/{variant}', [VariantController::class, 'update']);
     Route::delete('/delete-variant/{variant}', [VariantController::class, 'destroy']);

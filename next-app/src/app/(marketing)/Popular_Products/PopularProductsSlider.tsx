@@ -279,15 +279,15 @@ const PopularProductsSlider = () => {
                                                             e.currentTarget.src = "https://via.placeholder.com/400x400?text=No+Image";
                                                         }}
                                                     />
-                                                    {hasDiscount && (
+                                                    {/* {hasDiscount && (
                                                         <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-semibold">
                                                             {Math.round((1 - price / originalPrice) * 100)}% OFF
                                                         </span>
-                                                    )}
+                                                    )} */}
                                                 </div>
                                                 <div className="p-3 flex-1 flex flex-col justify-between">
                                                     <div>
-                                                        <h3 className="font-medium text-gray-900 mb-1.5 line-clamp-2 group-hover:text-orange-600 transition-colors text-xs leading-tight min-h-[2rem]">
+                                                        <h3 className="font-medium text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors text-xs leading-tight min-h-[2rem]">
                                                             {product.name}
                                                         </h3>
                                                         <Rating rating={rating} reviewsCount={product.reviews_count || 0} />

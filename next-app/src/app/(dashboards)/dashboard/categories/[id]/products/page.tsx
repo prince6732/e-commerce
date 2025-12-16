@@ -7,19 +7,23 @@ import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import { getCategoryById } from "../../../../../../../utils/category";
-import { getSubcategoryProducts } from "../../../../../../../utils/product";
+import { getAdminProducts, deleteProduct } from "../../../../../../../utils/product";
 import { TiInfoLargeOutline } from "react-icons/ti";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 const basePath: string =
     `${process.env.NEXT_PUBLIC_UPLOAD_BASE}` || "https://api.zelton.co.in";
 
 export default function Products() {
     const [category, setCategory] = useState<Category | null>(null);
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<any[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+    const [pagination, setPagination] = useState<any>(null);
+    const [currentPage, setCurrentPage] = useState(1);
     const { showLoader, hideLoader } = useLoader();
     const params = useParams();
     const categoryId = Number(params.id);
@@ -28,8 +32,8 @@ export default function Products() {
     useEffect(() => {
         if (!categoryId) return;
         fetchCategory();
-        fetchProducts();
-    }, [categoryId]);
+        fetchProducts(currentPage);
+    }, [categoryId, currentPage]);
 
     const fetchCategory = async () => {
         showLoader();
@@ -44,18 +48,43 @@ export default function Products() {
         }
     };
 
-    const fetchProducts = async () => {
+    const fetchProducts = async (page: number) => {
         if (!categoryId) return;
         showLoader();
         try {
-            const data = await getSubcategoryProducts(categoryId);
-            setProducts(data.products || []);
+            const response = await getAdminProducts(page, 20, { category_id: categoryId });
+            if (response.success && response.result) {
+                setProducts(response.result.products || []);
+                setPagination(response.result.pagination);
+            }
         } catch (err) {
             console.error(err);
             setErrorMessage("Failed to load products");
         } finally {
             hideLoader();
         }
+    };
+
+    const handleDeleteProduct = async () => {
+        if (!selectedProduct) return;
+        showLoader();
+        try {
+            await deleteProduct(selectedProduct.id);
+            setSuccessMessage("Product deleted successfully");
+            setIsDeleteModalOpen(false);
+            setSelectedProduct(null);
+            fetchProducts(currentPage);
+        } catch (err) {
+            console.error(err);
+            setErrorMessage("Failed to delete product");
+        } finally {
+            hideLoader();
+        }
+    };
+
+    const openDeleteModal = (product: any) => {
+        setSelectedProduct(product);
+        setIsDeleteModalOpen(true);
     };
 
     const addProduct = () => {
@@ -70,16 +99,16 @@ export default function Products() {
         }
     };
 
-    const openDescriptionModal = (product: Product) => {
+    const openDescriptionModal = (product: any) => {
         setSelectedProduct(product);
         setIsDescriptionModalOpen(true);
     };
 
-    const goToProductDetail = (product: Product) => {
+    const goToProductDetail = (product: any) => {
         router.push(`/dashboard/categories/${categoryId}/products/${product.id}/detail`);
     };
 
-    const editProduct = (product: Product) => {
+    const editProduct = (product: any) => {
         if (category?.attributes && category?.attributes?.length > 0) {
             if (category?.attributes?.length === 1) {
                 router.push(`/dashboard/categories/${categoryId}/products/add-single-attribute-product?productId=${product.id}`);
@@ -145,7 +174,8 @@ export default function Products() {
                                     <th className="px-6 py-4">Image</th>
                                     <th className="px-6 py-4">Name</th>
                                     <th className="px-6 py-4">Item Code</th>
-                                    <th className="px-6 py-4">Description</th>
+                                    <th className="px-6 py-4">Stock</th>
+                                    <th className="px-6 py-4">Price Range</th>
                                     <th className="px-6 py-4">Status</th>
                                     <th className="px-6 py-4 text-end">Actions</th>
                                 </tr>
@@ -160,7 +190,7 @@ export default function Products() {
                                             className="bg-white/5 hover:bg-white/10 transition"
                                         >
                                             {/* Index */}
-                                            <td className="px-6 py-4">{index + 1}</td>
+                                            <td className="px-6 py-4">{(currentPage - 1) * 20 + index + 1}</td>
 
                                             {/* Image */}
                                             <td className="px-6 py-4">
@@ -182,19 +212,28 @@ export default function Products() {
 
                                             {/* Item Code */}
                                             <td className="px-6 py-4">
-                                                {product.item_code}
+                                                {product.item_code || '-'}
                                             </td>
 
-                                            {/* Description */}
+                                            {/* Stock */}
                                             <td className="px-6 py-4">
-                                                <button
-                                                    onClick={() => openDescriptionModal(product)}
-                                                    className="px-3 py-2 text-xs rounded-md
-                  bg-blue-100 text-blue-700
-                  hover:bg-blue-200 font-semibold transition"
-                                                >
-                                                    View Description
-                                                </button>
+                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                                    product.total_stock > 10 
+                                                        ? "bg-green-100 text-green-700" 
+                                                        : product.total_stock > 0 
+                                                        ? "bg-yellow-100 text-yellow-700"
+                                                        : "bg-red-100 text-red-700"
+                                                }`}>
+                                                    {product.total_stock || 0} units
+                                                </span>
+                                            </td>
+
+                                            {/* Price Range */}
+                                            <td className="px-6 py-4">
+                                                {product.min_price === product.max_price 
+                                                    ? `₹${product.min_price}`
+                                                    : `₹${product.min_price} - ₹${product.max_price}`
+                                                }
                                             </td>
 
                                             {/* Status */}
@@ -212,6 +251,14 @@ export default function Products() {
                                             {/* Actions */}
                                             <td className="px-6 py-4 text-right flex gap-2 justify-end">
                                                 <button
+                                                    title="View Product Details"
+                                                    onClick={() => goToProductDetail(product)}
+                                                    className="size-10 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full
+                  flex items-center justify-center transition"
+                                                >
+                                                    <TiInfoLargeOutline className="h-4 w-4" />
+                                                </button>
+                                                <button
                                                     title="Edit Product"
                                                     onClick={() => editProduct(product)}
                                                     className="size-10 bg-gc-300/30 hover:bg-orange-400 rounded-full flex items-center justify-center"
@@ -219,12 +266,12 @@ export default function Products() {
                                                     <Pencil className="h-4 w-4" />
                                                 </button>
                                                 <button
-                                                    title="View Product Details"
-                                                    onClick={() => goToProductDetail(product)}
-                                                    className="size-10 bg-gc-300/30 hover:bg-orange-400 rounded-full
+                                                    title="Delete Product"
+                                                    onClick={() => openDeleteModal(product)}
+                                                    className="size-10 bg-red-100 hover:bg-red-200 text-red-600 rounded-full
                   flex items-center justify-center transition"
                                                 >
-                                                    <TiInfoLargeOutline className="h-4 w-4" />
+                                                    <Trash2 className="h-4 w-4" />
                                                 </button>
                                             </td>
 
@@ -232,7 +279,7 @@ export default function Products() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={7} className="text-center text-zinc-400 py-8 italic">
+                                        <td colSpan={8} className="text-center text-zinc-400 py-8 italic">
                                             No Products Found
                                         </td>
                                     </tr>
@@ -241,9 +288,46 @@ export default function Products() {
 
                         </table>
                     </div>
+
+                    {/* Pagination */}
+                    {pagination && pagination.last_page > 1 && (
+                        <div className="flex items-center justify-between mt-4 px-4">
+                            <div className="text-sm text-gray-600">
+                                Showing {pagination.from} to {pagination.to} of {pagination.total} products
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                >
+                                    Previous
+                                </button>
+                                <span className="px-4 py-2 bg-orange-100 text-orange-600 rounded-lg font-medium">
+                                    {currentPage} / {pagination.last_page}
+                                </span>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(pagination.last_page, prev + 1))}
+                                    disabled={currentPage === pagination.last_page}
+                                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
             </div>
+
+            {/* Success/Error Toast */}
+            {(successMessage || errorMessage) && (
+                <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-lg font-semibold ${
+                    successMessage ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                }`}>
+                    {successMessage || errorMessage}
+                </div>
+            )}
 
             {/* Description Modal */}
             <Modal
@@ -265,6 +349,39 @@ export default function Products() {
                                 selectedProduct?.description || "<p>No Description</p>",
                         }}
                     />
+                </div>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => {
+                    setIsDeleteModalOpen(false);
+                    setSelectedProduct(null);
+                }}
+                title="Delete Product"
+            >
+                <div className="p-4">
+                    <p className="text-gray-700 mb-4">
+                        Are you sure you want to delete <strong>{selectedProduct?.name}</strong>? This action cannot be undone.
+                    </p>
+                    <div className="flex gap-3 justify-end">
+                        <button
+                            onClick={() => {
+                                setIsDeleteModalOpen(false);
+                                setSelectedProduct(null);
+                            }}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleDeleteProduct}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </div>
             </Modal>
         </div>

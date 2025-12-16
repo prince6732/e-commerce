@@ -12,6 +12,7 @@ import {
   Layers,
   Palette,
   Mail,
+  Package,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
@@ -26,6 +27,7 @@ const navLinks = [
   { href: "/dashboard/brands", label: "Brands", icon: Tag, roles: ["Admin"] },
   { href: "/dashboard/attributes", label: "Attributes", icon: Layers, roles: ["Admin"] },
   { href: "/dashboard/categories", label: "Categories", icon: FolderTree, roles: ["Admin"] },
+  { href: "/dashboard/products", label: "Products", icon: Package, roles: ["Admin"] },
   { href: "/dashboard/orders", label: "Orders", icon: FolderTree, roles: ["Admin"] },
   { href: "/dashboard/sliders", label: "Sliders", icon: Images, roles: ["Admin"] },
   { href: "/dashboard/contact-messages", label: "Contact Messages", icon: Mail, roles: ["Admin"] },

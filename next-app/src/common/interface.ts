@@ -87,6 +87,24 @@ export interface Product {
   detail_json?: string;
   category?: any;
   brand?: any;
+  item_attributes?: ItemAttribute[];
+  product_attribute_values?: ProductAttributeValue[];
+}
+
+export interface ItemAttribute {
+  product_id: number;
+  attribute_id: number;
+  has_images: boolean;
+  is_primary: boolean;
+  attribute?: Attribute;
+}
+
+export interface ProductAttributeValue {
+  product_id: number;
+  attribute_id: number;
+  attribute_value_id: number;
+  attribute?: Attribute;
+  attribute_value?: AttributeValue;
 }
 
 export interface RawProduct {

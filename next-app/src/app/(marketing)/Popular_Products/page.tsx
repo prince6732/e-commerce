@@ -62,7 +62,7 @@ const Popular_Products = () => {
         const fetchPopularProducts = async () => {
             try {
                 setLoading(true);
-                const response = await getMostOrderedProducts(8); 
+                const response = await getMostOrderedProducts(8);
 
                 if (response.success && response.result) {
                     const products = response.result.products || [];
@@ -251,11 +251,11 @@ const Popular_Products = () => {
                                                     e.currentTarget.src = "https://via.placeholder.com/400x400?text=Product+Image+Not+Found";
                                                 }}
                                             />
-                                            {hasDiscount && (
+                                            {/* {hasDiscount && (
                                                 <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-red-500 text-white text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full font-semibold">
                                                     {Math.round((1 - price / originalPrice) * 100)}% OFF
                                                 </span>
-                                            )}
+                                            )} */}
                                         </div>
                                         <div className="p-2 sm:p-3 md:px-4 md:pb-4">
                                             <h3 className="font-medium text-gray-900 mb-1 sm:mb-2 line-clamp-2 group-hover:text-orange-600 transition-colors text-xs sm:text-sm md:text-base leading-tight">

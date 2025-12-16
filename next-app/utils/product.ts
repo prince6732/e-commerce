@@ -113,3 +113,64 @@ export const getTopSellingProducts = async (limit?: number): Promise<ApiResponse
         };
     }
 };
+
+export const getAdminProducts = async (page: number = 1, perPage: number = 20, filters?: any): Promise<ApiResponse<any>> => {
+    try {
+        const params = { page, per_page: perPage, ...filters };
+        const response = await axios.get('/api/admin-products', { params });
+        const res = response.data;
+
+        return {
+            success: res.res === "success",
+            message: res.message || "",
+            result: res.data || null,
+            errors: res.errors || [],
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            message: error.message || "Failed to fetch admin products",
+            errors: [],
+        };
+    }
+};
+
+export const getProductDetails = async (id: number | string): Promise<ApiResponse<Product>> => {
+    try {
+        const response = await axios.get(`/api/admin-product-details/${id}`);
+        const res = response.data;
+
+        return {
+            success: res.res === "success",
+            message: res.message || "",
+            result: res.product || null,
+            errors: res.errors || [],
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            message: error.message || "Failed to fetch product details",
+            errors: [],
+        };
+    }
+};
+
+export const deleteVariant = async (id: number): Promise<ApiResponse<string>> => {
+    try {
+        const response = await axios.delete(`/api/delete-variant/${id}`);
+        const res = response.data;
+
+        return {
+            success: res.res === "success",
+            message: res.message || "",
+            result: undefined,
+            errors: res.errors || [],
+        };
+    } catch (error: any) {
+        return {
+            success: false,
+            message: error.message || "Failed to delete variant",
+            errors: [],
+        };
+    }
+};

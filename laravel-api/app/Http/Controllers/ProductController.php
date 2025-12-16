@@ -584,6 +584,145 @@ class ProductController extends Controller
         ]);
     }
 
+    public function deleteVariant(Variant $variant)
+    {
+        try {
+            $variant->delete();
+            return response()->json([
+                'res'     => 'success',
+                'message' => 'Variant deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'res'     => 'error',
+                'message' => 'Failed to delete variant: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getAdminProducts(Request $request)
+    {
+        try {
+            $perPage = $request->input('per_page', 20);
+            $page = $request->input('page', 1);
+            $search = $request->input('search', '');
+            $categoryId = $request->input('category_id');
+            $brandId = $request->input('brand_id');
+            $status = $request->input('status');
+
+            $query = Product::with(['category:id,name', 'brand:id,name', 'variants'])
+                ->select('id', 'name', 'item_code', 'image_url', 'status', 'category_id', 'brand_id', 'created_at', 'updated_at');
+
+            // Search filter
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('item_code', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            // Category filter
+            if ($categoryId) {
+                $query->where('category_id', $categoryId);
+            }
+
+            // Brand filter
+            if ($brandId) {
+                $query->where('brand_id', $brandId);
+            }
+
+            // Status filter
+            if ($status !== null && $status !== '') {
+                $query->where('status', (bool) $status);
+            }
+
+            // Order by latest first
+            $query->orderBy('created_at', 'desc');
+
+            // Paginate
+            $products = $query->paginate($perPage, ['*'], 'page', $page);
+
+            // Transform products to include computed fields
+            $products->getCollection()->transform(function ($product) {
+                // If product image doesn't exist, use first variant image
+                if (!$product->image_url && $product->variants->isNotEmpty()) {
+                    $firstVariantWithImage = $product->variants->firstWhere('image_url', '!=', null);
+                    $product->image_url = $firstVariantWithImage ? $firstVariantWithImage->image_url : null;
+                }
+
+                // Calculate total stock from all variants
+                $product->total_stock = $product->variants->sum('stock');
+
+                // Get price range from variants
+                $prices = $product->variants->pluck('sp')->filter();
+                $product->min_price = $prices->min() ?? 0;
+                $product->max_price = $prices->max() ?? 0;
+
+                // Count variants
+                $product->variants_count = $product->variants->count();
+
+                // Remove full variants array to reduce response size
+                unset($product->variants);
+
+                return $product;
+            });
+
+            return response()->json([
+                'res' => 'success',
+                'message' => 'Products fetched successfully',
+                'data' => [
+                    'products' => $products->items(),
+                    'pagination' => [
+                        'current_page' => $products->currentPage(),
+                        'per_page' => $products->perPage(),
+                        'total' => $products->total(),
+                        'last_page' => $products->lastPage(),
+                        'from' => $products->firstItem(),
+                        'to' => $products->lastItem(),
+                    ]
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'res' => 'error',
+                'message' => 'Failed to fetch products: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getProductDetails(Product $product)
+    {
+        try {
+            $product->load([
+                'category',
+                'brand',
+                'variants' => function ($query) {
+                    $query->with(['attributeValues.attribute']);
+                },
+                'itemAttributes.attribute',
+                'productAttributeValues.attributeValue'
+            ]);
+
+            // If product image doesn't exist, use first variant image
+            if (!$product->image_url && $product->variants->isNotEmpty()) {
+                $firstVariantWithImage = $product->variants->firstWhere('image_url', '!=', null);
+                $product->image_url = $firstVariantWithImage ? $firstVariantWithImage->image_url : null;
+            }
+
+            return response()->json([
+                'res' => 'success',
+                'message' => 'Product details fetched successfully',
+                'product' => $product,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'res' => 'error',
+                'message' => 'Failed to fetch product details: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function getSubcategoryProduct($categoryId)
     {
         try {
@@ -949,12 +1088,89 @@ class ProductController extends Controller
                     ];
                 });
 
+            // If most ordered products are less than 8, fill with newly created products
+            $finalProducts = $products;
+            if ($products->count() < 8) {
+                $neededCount = 8 - $products->count();
+                $existingIds = $products->pluck('id')->toArray();
+                
+                // Get newly created products that are not in most ordered list
+                $newProducts = Product::with([
+                    'category:id,name',
+                    'brand:id,name',
+                    'variants' => function ($query) {
+                        $query->select('id', 'product_id', 'title', 'sku', 'sp', 'mrp', 'stock', 'image_url', 'image_json')
+                            ->orderBy('sp', 'asc');
+                    }
+                ])
+                    ->whereNotIn('id', $existingIds)
+                    ->active()
+                    ->orderBy('created_at', 'desc')
+                    ->limit($neededCount)
+                    ->get()
+                    ->each(function ($product) {
+                        $product->append(['average_rating', 'reviews_count']);
+                    })
+                    ->map(function ($product) {
+                        $prices = $product->variants->pluck('sp')->filter()->values();
+                        $minPrice = $prices->min() ?: 0;
+                        $maxPrice = $prices->max() ?: 0;
+
+                        $totalStock = $product->variants->sum('stock');
+
+                        $bestVariant = $product->variants->sortBy('sp')->first();
+
+                        $imageUrl = $product->image_url ?: ($bestVariant ? $bestVariant->image_url : null);
+
+                        return [
+                            'id' => $product->id,
+                            'name' => $product->name,
+                            'description' => $product->description,
+                            'image_url' => $imageUrl,
+                            'category' => $product->category ? [
+                                'id' => $product->category->id,
+                                'name' => $product->category->name,
+                            ] : null,
+                            'brand' => $product->brand ? [
+                                'id' => $product->brand->id,
+                                'name' => $product->brand->name,
+                            ] : null,
+                            'price_range' => [
+                                'min' => $minPrice,
+                                'max' => $maxPrice,
+                                'currency' => 'INR'
+                            ],
+                            'total_stock' => $totalStock,
+                            'likes_count' => $product->likes_count ?? 0,
+                            'variants_count' => $product->variants->count(),
+                            'best_variant' => $bestVariant ? [
+                                'id' => $bestVariant->id,
+                                'title' => $bestVariant->title,
+                                'sku' => $bestVariant->sku,
+                                'sp' => $bestVariant->sp,
+                                'mrp' => $bestVariant->mrp,
+                                'stock' => $bestVariant->stock,
+                                'image_url' => $bestVariant->image_url,
+                            ] : null,
+                            'total_ordered_quantity' => 0,
+                            'total_orders_count' => 0,
+                            'total_revenue' => 0,
+                            'average_rating' => $product->average_rating,
+                            'reviews_count' => $product->reviews_count,
+                            'created_at' => $product->created_at,
+                        ];
+                    });
+                
+                // Merge most ordered products with new products
+                $finalProducts = $products->concat($newProducts);
+            }
+
             return response()->json([
                 'res' => 'success',
                 'message' => 'Most ordered products fetched successfully.',
                 'data' => [
-                    'products' => $products,
-                    'count' => $products->count(),
+                    'products' => $finalProducts,
+                    'count' => $finalProducts->count(),
                     'limit' => $limit,
                     'analytics' => [
                         'total_units_sold' => $products->sum('total_ordered_quantity'),

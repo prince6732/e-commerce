@@ -53,7 +53,7 @@ const ProductPage = () => {
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.zelton.co.in/api";
     const baseUrl = process.env.NEXT_PUBLIC_UPLOAD_BASE || "https://api.zelton.co.in";
-        
+
     const fetchLiveRatingSummary = async (showLoading = false) => {
         if (!id) return;
         try {
@@ -139,13 +139,13 @@ const ProductPage = () => {
                     image_url: v.image_url ? `${baseUrl}${v.image_url}` : null,
                 })) || [],
             }));
-            
+
             if (page === 1) {
                 setSimilarProducts(processedProducts);
             } else {
                 setSimilarProducts(prev => [...prev, ...processedProducts]);
             }
-            
+
             setSimilarPagination(response.pagination);
         } catch (error) {
             console.error('Error fetching similar products:', error);
@@ -331,19 +331,6 @@ const ProductPage = () => {
             .join(' ')
             .trim();
     };
-
-    // if (loading) {
-    //     return (
-    //         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-    //             <div className="container mx-auto px-4 py-16">
-    //                 <div className="text-center">
-    //                     <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
-    //                     <p className="text-gray-600">Loading product details...</p>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     );
-    // }
 
     if (!product) {
         return (
@@ -584,7 +571,7 @@ const ProductPage = () => {
                                     {product.item_attributes.map((ia) => (
                                         <div key={ia.attribute_id}>
                                             <h4 className="font-semibold mb-2 text-gray-800 text-sm">
-                                                {ia.attribute.name}
+                                                {ia.attribute?.name}
                                             </h4>
                                             <div className="flex flex-wrap gap-2">
                                                 {attributeOptions[ia.attribute_id]?.map((val) => {
@@ -834,7 +821,7 @@ const ProductPage = () => {
                 )}
 
                 {/* Write Review Section */}
-                <div className="mt-8 bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-6">
+                {/* <div className="mt-8 bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-6">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             {(liveRatingSummary || product.rating_summary) && (
@@ -868,8 +855,17 @@ const ProductPage = () => {
                                     router.push('/login');
                                     return;
                                 }
-                                // Open review modal - will be handled by ProductReviews component
-                                window.dispatchEvent(new CustomEvent('openReviewModal'));
+                                // Dispatch event to open review modal
+                                window.dispatchEvent(new CustomEvent('openReviewModal', {
+                                    detail: { productId: product.id }
+                                }));
+                                // Scroll to reviews section smoothly
+                                setTimeout(() => {
+                                    const reviewsSection = document.querySelector('#reviews-section');
+                                    if (reviewsSection) {
+                                        reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }
+                                }, 100);
                             }}
                             className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg flex items-center gap-2 whitespace-nowrap"
                         >
@@ -877,7 +873,7 @@ const ProductPage = () => {
                             Write a Review
                         </button>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Similar Products Section */}
                 {similarProducts.length > 0 && (
@@ -995,7 +991,7 @@ const ProductPage = () => {
                 )}
 
                 {/* Reviews Section - Below Similar Products */}
-                <div className="mt-12">
+                <div className="mt-12" id="reviews-section">
                     <ProductReviews
                         productId={product.id}
                         onRatingUpdate={() => {

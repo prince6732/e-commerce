@@ -703,7 +703,7 @@ function VariantProductForm() {
                                         key={variant.id}
                                         className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm flex flex-col gap-4 relative"
                                     >
-                                        {!productId && (
+                                        {/* {!productId && ( */}
                                             <button
                                                 type="button"
                                                 onClick={() => removeVariant(variantIndex)}
@@ -723,7 +723,7 @@ function VariantProductForm() {
                                             >
                                                 <X />
                                             </button>
-                                        )}
+                                        {/* )} */}
 
                                         <div className="flex flex-col sm:flex-row gap-4 items-center">
                                             <div className="flex-1">

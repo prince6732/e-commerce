@@ -14,7 +14,7 @@ import {
 } from "@/common/interface";
 import { useLoader } from "@/context/LoaderContext";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { FaTimes } from "react-icons/fa";
+import { FaArrowLeft, FaTimes } from "react-icons/fa";
 import { getCategoryByIdForProduct } from "../../../../../../../../utils/category";
 import { fetchBrands } from "../../../../../../../../utils/brand";
 import { createProduct, getProductById, updateProduct } from "../../../../../../../../utils/product";
@@ -146,7 +146,7 @@ function VariantProductForm() {
                 await fetchProductDetails(productId);
             }
         };
-        
+
         initializeForm();
     }, [productId]);
 
@@ -249,7 +249,7 @@ function VariantProductForm() {
                         hasAttributeImages2: variantTwoHasImages,
                         options: group.map((v: any) => {
                             const attr2Value = v.attribute_values?.find((av: any) => av.attribute_id === secondaryAttrId);
-                            
+
                             // Extract option title (everything after first word)
                             const vTitleParts = v.title ? v.title.split(' ') : [];
                             const optionTitle = vTitleParts.slice(1).join(' ') || '';
@@ -382,18 +382,18 @@ function VariantProductForm() {
                         image_url: getImageUrl(data, variantIndex, optionIndex),
                         image_json: JSON.stringify(getImageList(data, variantIndex, optionIndex)),
                     };
-                    
+
                     // Only include attributeValues if they exist
                     const attributeValues = [variant.attributeValue, attributeValue].filter(Boolean);
                     if (attributeValues.length > 0) {
                         formattedVariant.attributeValues = attributeValues;
                     }
-                    
+
                     // Include variant ID if updating and ID exists
                     if (productId && option.id) {
                         formattedVariant.id = option.id;
                     }
-                    
+
                     return formattedVariant;
                 })
             );
@@ -477,6 +477,18 @@ function VariantProductForm() {
                         <h2 className="lg:text-3xl text-xl font-bold px-5 text-gray-900 tracking-tight">
                             {productId ? "Update Product" : "Fill Product Details"}
                         </h2>
+                        {/* Back Button */}
+                        <button
+                            type="button"
+                            onClick={() => router.back()}
+                            className="flex items-center gap-2 px-4 py-2 
+                                                            bg-gray-100 hover:bg-gray-200 
+                                                            text-gray-700 rounded-xl shadow-sm 
+                                                            hover:shadow-md transition-all duration-200"
+                        >
+                            <FaArrowLeft className="text-lg" />
+                            <span className="font-medium">Back</span>
+                        </button>
                     </div>
 
                 </div>
@@ -797,27 +809,16 @@ function VariantProductForm() {
                                         className="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50 shadow-sm flex flex-col gap-2 relative"
                                     >
 
-                                        {!productId && (
+                                        {/* {!productId && ( */}
                                             <button
                                                 type="button"
                                                 onClick={() => removeVariant(variantIndex)}
                                                 title="Remove Variant"
-                                                className="absolute top-[-6] right-[-8]
-                                                                                            flex items-center justify-center
-                                                                                            h-9 w-9
-                                                                                            rounded-xl
-                                                                                            bg-red-50
-                                                                                            text-red-600
-                                                                                            border border-red-200
-                                                                                            hover:bg-red-500 hover:text-white 
-                                                                                            hover:border-red-500
-                                                                                            shadow-sm hover:shadow-md
-                                                                                            transition-all duration-200
-                                                                                        "
-                                            >
+                                                className="absolute top-[-6] right-[-8] flex items-center justify-center h-9 w-9 rounded-xl bg-red-50 text-red-600 border border-red-200
+                                                          hover:bg-red-500 hover:text-white hover:border-red-500 shadow-sm hover:shadow-md transition-all duration-200 ">
                                                 <X size={20} className="text-red-600 font-bold hover:text-white"></X>
                                             </button>
-                                        )}
+                                        {/* )} */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start">
 
                                             {/* Variant Name */}
