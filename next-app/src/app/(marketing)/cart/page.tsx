@@ -294,7 +294,8 @@ const CartPage = () => {
                                                             <span
                                                                 key={key}
                                                                 className="px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full font-medium"
-                                                            > {value}
+                                                            >
+                                                                {value}
                                                             </span>
                                                         ))}
                                                     </div>
