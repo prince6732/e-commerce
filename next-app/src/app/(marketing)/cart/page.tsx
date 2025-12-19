@@ -43,7 +43,7 @@ const CartPage = () => {
     const [showClearModal, setShowClearModal] = useState(false);
     const [itemToRemove, setItemToRemove] = useState<number | null>(null);
     const [itemToRemoveName, setItemToRemoveName] = useState<string>("");
-    
+
     useEffect(() => {
         loadTheme();
     }, []);
@@ -294,8 +294,7 @@ const CartPage = () => {
                                                             <span
                                                                 key={key}
                                                                 className="px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full font-medium"
-                                                            >
-                                                                {value}
+                                                            > {value}
                                                             </span>
                                                         ))}
                                                     </div>
