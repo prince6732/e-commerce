@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   images: {
     domains: [
       "localhost",
+      "www.api.zelton.co.in"
     ],
   },
 }; 
