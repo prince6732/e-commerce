@@ -444,7 +444,7 @@ const CartPage = () => {
                 </div>
             )}
 
-            {/* Clear Cart Confirmation Modal */}
+            
             {showClearModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
